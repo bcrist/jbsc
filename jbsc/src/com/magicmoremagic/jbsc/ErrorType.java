@@ -1,0 +1,17 @@
+package com.magicmoremagic.jbsc;
+
+public enum ErrorType {
+	
+	UNKNOWN,
+	ASSERTION_ERROR,
+	WARNING,
+	PARSE_ERROR,
+	
+	FILE_NOT_FOUND,
+	IO_EXCEPTION,
+	UNEXPECTED_EOF,
+	SHORT_HEX_ESCAPE,
+	INVALID_LITERAL
+	;
+	
+}

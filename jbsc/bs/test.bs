@@ -1,0 +1,200 @@
+
+spec "be/bs/types";
+
+namespace be {
+namespace bs {
+
+flag no-skip-parse-assign;
+
+coltype small_integer {
+	affinity "INTEGER";
+	constraints "NOT NULL";
+	include <limits>;
+	assign "stmt->bind(parameter, static_cast<I32>(value));";
+	parse <[@\t[
+		I32 temp = stmt->getInt(column);
+		value = static_cast<T>(temp);
+		if (temp < ::std::numeric_limits<T>::min() ||
+		    temp > ::std::numeric_limits<T>::max())
+		{
+		   return false;
+		}
+	]]>;
+}
+
+coltype nullable_small_integer {
+	affinity "INTEGER";
+	include <limits>;
+	assign "stmt->bind(parameter, static_cast<I32>(value));";
+	parse <[@\t[
+		I32 temp = stmt->getInt(column);
+		value = static_cast<T>(temp);
+		if (temp < ::std::numeric_limits<T>::min() ||
+		    temp > ::std::numeric_limits<T>::max())
+		{
+		   return false;
+		}
+	]]>;
+}
+
+coltype integer {
+	affinity "INTEGER";
+	constraints "NOT NULL";
+	include <limits>;
+	assign "stmt->bind(parameter, static_cast<I64>(value));";
+	parse <[@\t[
+		I64 temp = stmt->getInt64(column);
+		value = static_cast<T>(temp);
+		if (temp < ::std::numeric_limits<T>::min() ||
+		    temp > ::std::numeric_limits<T>::max())
+		{
+		   return false;
+		}
+	]]>;
+}
+
+coltype nullable_integer {
+	affinity "INTEGER";
+	include <limits>;
+	assign "stmt->bind(parameter, static_cast<I64>(value));";
+	parse <[@\t[
+		I64 temp = stmt->getInt64(column);
+		value = static_cast<T>(temp);
+		if (temp < ::std::numeric_limits<T>::min() ||
+		    temp > ::std::numeric_limits<T>::max())
+		{
+		   return false;
+		}
+	]]>;
+}
+
+coltype big_integer {
+	affinity "INTEGER";
+	constraints "NOT NULL";
+	assign "stmt->bind(parameter, static_cast<I64>(value));";
+	parse "value = static_cast<T>(stmt->getInt64(column));";
+}
+
+coltype unsigned_big_integer {
+	affinity "INTEGER";
+	constraints "NOT NULL";
+	assign "stmt->bind(parameter, static_cast<U64>(value));";
+	parse "value = static_cast<T>(stmt->getUInt64(column));";
+}
+
+coltype nullable_big_integer {
+	affinity "INTEGER";
+	assign "stmt->bind(parameter, static_cast<I64>(value));";
+	parse "value = static_cast<T>(stmt->getInt64(column));";
+}
+
+coltype nullable_unsigned_big_integer {
+	affinity "INTEGER";
+	assign "stmt->bind(parameter, static_cast<U64>(value));";
+	parse "value = static_cast<T>(stmt->getUInt64(column));";
+}
+
+coltype real {
+	affinity "REAL";
+	constraints "NOT NULL";
+	include <limits>;
+	include <cmath>;
+	assign "stmt->bind(parameter, static_cast<F64>(value));";
+	parse <[@\t[
+		F64 temp = stmt->getDouble(column);
+		value = static_cast<T>(temp);
+		if (temp < ::std::numeric_limits<T>::lowest() ||
+		    temp > ::std::numeric_limits<T>::max() ||
+		    (::abs)(temp) < ::std::numeric_limits<T>::min())
+		{
+		   return false;
+		}
+	]]>;
+}
+
+coltype nullable_real {
+	affinity "REAL";
+	include <limits>;
+	include <cmath>;
+	assign "stmt->bind(parameter, static_cast<F64>(value));";
+	parse <[@\t[
+		F64 temp = stmt->getDouble(column);
+		value = static_cast<T>(temp);
+		if (temp < ::std::numeric_limits<T>::lowest() ||
+		    temp > ::std::numeric_limits<T>::max() ||
+		    (::abs)(temp) < ::std::numeric_limits<T>::min())
+		{
+		   return false;
+		}
+	]]>;
+}
+
+coltype numeric {
+	affinity "NUMERIC";
+	constraints "NOT NULL";
+	include <limits>;
+	include <cmath>;
+	assign "stmt->bind(parameter, static_cast<F64>(value));";
+	parse <[@\t[
+		F64 temp = stmt->getDouble(column);
+		value = static_cast<T>(temp);
+		if (temp < ::std::numeric_limits<T>::lowest() ||
+		    temp > ::std::numeric_limits<T>::max() ||
+		    (::abs)(temp) < ::std::numeric_limits<T>::min())
+		{
+		   return false;
+		}
+	]]>;
+}
+
+coltype nullable_numeric {
+	affinity "NUMERIC";
+	include <limits>;
+	include <cmath>;
+	assign "stmt->bind(parameter, static_cast<F64>(value));";
+	parse <[@\t[
+		F64 temp = stmt->getDouble(column);
+		value = static_cast<T>(temp);
+		if (temp < ::std::numeric_limits<T>::lowest() ||
+		    temp > ::std::numeric_limits<T>::max() ||
+		    (::abs)(temp) < ::std::numeric_limits<T>::min())
+		{
+		   return false;
+		}
+	]]>;
+}
+
+coltype text {
+	affinity "TEXT";
+	constraints "NOT NULL";
+	assign "stmt->bind(parameter, value);";
+	parse "value = static_cast<T>(stmt->getTextString(column));";
+}
+
+coltype nullable_text {
+	affinity "TEXT";
+	assign "stmt->bind(parameter, value);";
+	parse "value = static_cast<T>(stmt->getTextString(column));";
+}
+
+coltype blob {
+	affinity "";
+	constraints "NOT NULL";
+	assign "stmt->bind(parameter, value);";
+	parse "value = static_cast<T>(stmt->getBlobCopy(column));";
+}
+
+coltype nullable_blob {
+	affinity "";
+	assign "stmt->bind(parameter, value);";
+	parse "value = static_cast<T>(stmt->getBlobCopy(column));";
+}
+
+type I8 {
+	class "I8";
+	fields small_integer;
+	flag assign-by-value;
+}
+
+} // namespace be::bs
+} // namespace be
