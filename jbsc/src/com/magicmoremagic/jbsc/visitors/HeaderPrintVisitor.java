@@ -30,7 +30,7 @@ public class HeaderPrintVisitor extends AbstractHeaderPrintVisitor {
 	
 	protected void printIncludes(Spec spec) {
 		AbstractSelectionVisitor<String> visitor = new GetRequiredIncludesVisitor(entitiesToPrint);
-		spec.acceptVisitor(visitor);
+		spec.visit(visitor);
 		
 		List<String> includes = new ArrayList<String>(visitor.getSelections());
 		if (!includes.isEmpty()) {

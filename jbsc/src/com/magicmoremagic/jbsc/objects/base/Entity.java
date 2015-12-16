@@ -1,5 +1,7 @@
 package com.magicmoremagic.jbsc.objects.base;
 
+import static com.magicmoremagic.jbsc.visitors.IEntityVisitor.*;
+
 import java.util.*;
 
 import com.magicmoremagic.jbsc.objects.Flag;
@@ -255,8 +257,36 @@ public abstract class Entity {
 		return this;
 	}
 
-	public int acceptVisitor(IEntityVisitor visitor) {
+	public int visit(IEntityVisitor visitor) {
+		int result = onVisitorVisit(visitor);
+		if ((result & (STOP | CANCEL_THIS)) == 0)
+			result |= onVisitorLeave(visitor);
+		
+		return result;
+	}
+	
+	public int visitParentChain(IEntityVisitor visitor) {
+		int result = onVisitorVisit(visitor);
+		
+		if ((result & STOP) != 0) return STOP;
+			
+		if ((result & CANCEL_PARENTS) == 0 && getParent() != null)
+			result |= getParent().visitParentChain(visitor);
+		
+		if ((result & STOP) != 0) return STOP;
+			
+		if ((result & CANCEL_THIS) == 0)
+			result |= onVisitorLeave(visitor);
+		
+		return CONTINUE;
+	}
+	
+	protected int onVisitorVisit(IEntityVisitor visitor) {
 		return visitor.visit(this);
+	}
+	
+	protected int onVisitorLeave(IEntityVisitor visitor) {
+		return visitor.leave(this);
 	}
 	
 }

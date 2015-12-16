@@ -130,8 +130,8 @@ public class Spec extends EntityContainer {
 	}
 	
 	@Override
-	protected int acceptVisitorEnter(IEntityVisitor visitor) {
-		int result = super.acceptVisitorEnter(visitor);
+	protected int onVisitorVisit(IEntityVisitor visitor) {
+		int result = super.onVisitorVisit(visitor);
 		if ((result & (IEntityVisitor.CANCEL_THIS | IEntityVisitor.STOP)) == 0) {
 			result |= visitor.visit(this);
 		}
@@ -139,8 +139,8 @@ public class Spec extends EntityContainer {
 	}
 	
 	@Override
-	protected int acceptVisitorLeave(IEntityVisitor visitor) {
-		int result = super.acceptVisitorLeave(visitor);
+	protected int onVisitorLeave(IEntityVisitor visitor) {
+		int result = super.onVisitorLeave(visitor);
 		if ((result & (IEntityVisitor.CANCEL_THIS | IEntityVisitor.STOP)) == 0) {
 			result |= visitor.leave(this);
 		}

@@ -173,7 +173,7 @@ public class JBSC {
 								writer = app.getFilePrintWriter(directory, spec.getOutputFileName(type));
 							}
 							
-							spec.acceptVisitor(type.getPrintVisitor(spec, writer));
+							spec.visit(type.getPrintVisitor(spec, writer));
 							writer.flush();
 						}
 					}

@@ -36,9 +36,9 @@ public enum OutputFileType {
 	
 	public boolean shouldPrintCode(Spec spec) {
 		AbstractSelectionVisitor<Entity> selectionVisitor = outputFileVisitors.getOutputSelectionVisitor();
-		spec.acceptVisitor(selectionVisitor);
+		spec.visit(selectionVisitor);
 		AbstractShouldPrintVisitor visitor = outputFileVisitors.getShouldPrintVisitor(selectionVisitor.getSelections());
-		spec.acceptVisitor(visitor);
+		spec.visit(visitor);
 		return visitor.shouldPrint();
 	}
 	
@@ -48,7 +48,7 @@ public enum OutputFileType {
 	
 	public IEntityVisitor getPrintVisitor(Spec spec, PrintWriter writer) {
 		AbstractSelectionVisitor<Entity> selectionVisitor = outputFileVisitors.getOutputSelectionVisitor();
-		spec.acceptVisitor(selectionVisitor);
+		spec.visit(selectionVisitor);
 		return outputFileVisitors.getPrintVisitor(writer, selectionVisitor.getSelections());
 	}
 	

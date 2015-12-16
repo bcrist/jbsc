@@ -12,22 +12,34 @@ public interface IEntityVisitor {
 	public static final int CANCEL_THIS = 1 << 0;
 	public static final int CANCEL_CHILDREN = 1 << 1;
 	public static final int CANCEL_SIBLINGS = 1 << 2;
+	public static final int CANCEL_PARENTS = CANCEL_CHILDREN; // only used for parent chain visitation
 	public static final int STOP = 1 << 3;
 	
 	int visit(Entity entity);
-	int visit(FieldType fieldType);
-	int visit(ColType function);
-	int visit(ClassType function);
-	int visit(Function function);
+	int leave(Entity entity);
 	
 	int visit(EntityContainer container);
-	int visit(Spec spec);
-	int visit(Namespace namespace);
-	int visit(Table table);
-	
 	int leave(EntityContainer container);
+	
+	int visit(Spec spec);
 	int leave(Spec spec);
+	
+	int visit(Namespace namespace);
 	int leave(Namespace namespace);
+	
+	int visit(FieldType fieldType);
+	int leave(FieldType fieldType);
+	
+	int visit(ColType colType);
+	int leave(ColType colType);
+	
+	int visit(ClassType classType);
+	int leave(ClassType classType);
+	
+	int visit(Table table);
 	int leave(Table table);
+	
+	int visit(Function function);
+	int leave(Function function);
 
 }

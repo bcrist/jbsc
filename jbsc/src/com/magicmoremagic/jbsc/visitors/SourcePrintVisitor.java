@@ -35,7 +35,7 @@ public class SourcePrintVisitor extends AbstractPrintVisitor {
 		writer.println();
 		
 		AbstractSelectionVisitor<String> visitor = new GetImplementationIncludesVisitor(entitiesToPrint);
-		spec.acceptVisitor(visitor);
+		spec.visit(visitor);
 		
 		List<String> includes = new ArrayList<String>(visitor.getSelections());
 		if (!includes.isEmpty()) {

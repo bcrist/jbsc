@@ -1,5 +1,7 @@
 package com.magicmoremagic.jbsc.objects.base;
 
+import static com.magicmoremagic.jbsc.visitors.IEntityVisitor.*;
+
 import java.util.*;
 
 import com.magicmoremagic.jbsc.util.CodeGenConfig;
@@ -88,7 +90,6 @@ public abstract class EntityContainer extends Entity {
 		return this;
 	}
 	
-	
 	final void doChildNameChange(String oldChildName, String newChildName, Entity child) {
 		Entity myChild = children.get(oldChildName);
 		if (myChild != null) {
@@ -108,43 +109,48 @@ public abstract class EntityContainer extends Entity {
 	}
 	
 	@Override
-	public int acceptVisitor(IEntityVisitor visitor) {
-		int result = super.acceptVisitor(visitor);
+	public int visit(IEntityVisitor visitor) {
+		int result = onVisitorVisit(visitor);
 		
-		if ((result & IEntityVisitor.STOP) != 0) return IEntityVisitor.STOP;
-		
-		if ((result & IEntityVisitor.CANCEL_THIS) == 0)
-			result |= acceptVisitorEnter(visitor);
-		
-		if ((result & IEntityVisitor.STOP) != 0) return IEntityVisitor.STOP;
+		if ((result & STOP) != 0) return STOP;
 			
-		if ((result & IEntityVisitor.CANCEL_CHILDREN) == 0)
-			result |= acceptVisitorChildren(visitor);
+		if ((result & CANCEL_CHILDREN) == 0)
+			result |= visitChildren(visitor);
 		
-		if ((result & IEntityVisitor.STOP) != 0) return IEntityVisitor.STOP;
+		if ((result & STOP) != 0) return STOP;
 			
-		if ((result & IEntityVisitor.CANCEL_THIS) == 0)
-			result |= acceptVisitorLeave(visitor);
+		if ((result & CANCEL_THIS) == 0)
+			result |= onVisitorLeave(visitor);
 				
 		return result;
 	}
 	
-	protected int acceptVisitorEnter(IEntityVisitor visitor) {
-		return visitor.visit(this);
-	}
-	
-	protected int acceptVisitorChildren(IEntityVisitor visitor) {
+	protected int visitChildren(IEntityVisitor visitor) {
 		for (Entity child : children.values()) {
-			int result = child.acceptVisitor(visitor);
+			int result = child.visit(visitor);
 			
-			if ((result & IEntityVisitor.STOP) != 0) return IEntityVisitor.STOP;
-			if ((result & IEntityVisitor.CANCEL_SIBLINGS) != 0) break;
+			if ((result & STOP) != 0) return STOP;
+			if ((result & CANCEL_SIBLINGS) != 0) break;
 		}
-		return 0;
+		return CONTINUE;
 	}
 	
-	protected int acceptVisitorLeave(IEntityVisitor visitor) {
-		return visitor.leave(this);
+	@Override
+	protected int onVisitorVisit(IEntityVisitor visitor) {
+		int result = super.onVisitorVisit(visitor);
+		if ((result & (IEntityVisitor.CANCEL_THIS | IEntityVisitor.STOP)) == 0) {
+			result |= visitor.visit(this);
+		}
+		return result;
+	}
+	
+	@Override
+	protected int onVisitorLeave(IEntityVisitor visitor) {
+		int result = super.onVisitorLeave(visitor);
+		if ((result & (IEntityVisitor.CANCEL_THIS | IEntityVisitor.STOP)) == 0) {
+			result |= visitor.leave(this);
+		}
+		return result;
 	}
 	
 	// find's the closest common ancestor of a specific type shared by both entities
