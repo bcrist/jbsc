@@ -9,7 +9,7 @@ import com.magicmoremagic.jbsc.objects.base.Entity;
 import com.magicmoremagic.jbsc.objects.base.EntityContainer;
 import com.magicmoremagic.jbsc.objects.containers.Spec;
 import com.magicmoremagic.jbsc.util.CodeGenHelper;
-import com.magicmoremagic.jbsc.visitors.IEntityVisitor;
+import com.magicmoremagic.jbsc.visitors.base.IEntityVisitor;
 
 public class ColType extends FieldType {
 
@@ -197,7 +197,7 @@ public class ColType extends FieldType {
 			
 			String qualifiedBedName;
 			try {
-				qualifiedBedName = getParent().lookupName("be.bed.Bed").getCodeName(getNamespace());
+				qualifiedBedName = getParent().lookupName("be.bed.Bed").getQualifiedCodeName(getNamespace());
 			} catch (NullPointerException e) {
 				qualifiedBedName = "::be::bed::Bed";
 			}
@@ -207,7 +207,7 @@ public class ColType extends FieldType {
 			
 			String qualifiedCachedStmtName;
 			try {
-				qualifiedCachedStmtName = getParent().lookupName("be.bed.CachedStmt").getCodeName(getNamespace());
+				qualifiedCachedStmtName = getParent().lookupName("be.bed.CachedStmt").getQualifiedCodeName(getNamespace());
 			} catch (NullPointerException e) {
 				qualifiedCachedStmtName = "::be::bed::CachedStmt";
 			}
@@ -267,7 +267,7 @@ public class ColType extends FieldType {
 			
 			String qualifiedBedName;
 			try {
-				qualifiedBedName = getParent().lookupName("be.bed.Bed").getCodeName(getNamespace());
+				qualifiedBedName = getParent().lookupName("be.bed.Bed").getQualifiedCodeName(getNamespace());
 			} catch (NullPointerException e) {
 				qualifiedBedName = "::be::bed::Bed";
 			}
@@ -277,7 +277,7 @@ public class ColType extends FieldType {
 			
 			String qualifiedCachedStmtName;
 			try {
-				qualifiedCachedStmtName = getParent().lookupName("be.bed.CachedStmt").getCodeName(getNamespace());
+				qualifiedCachedStmtName = getParent().lookupName("be.bed.CachedStmt").getQualifiedCodeName(getNamespace());
 			} catch (NullPointerException e) {
 				qualifiedCachedStmtName = "::be::bed::CachedStmt";
 			}

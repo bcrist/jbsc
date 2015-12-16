@@ -1,4 +1,4 @@
-package com.magicmoremagic.jbsc.visitors;
+package com.magicmoremagic.jbsc.visitors.base;
 
 import com.magicmoremagic.jbsc.objects.Function;
 import com.magicmoremagic.jbsc.objects.base.Entity;
@@ -8,6 +8,11 @@ import com.magicmoremagic.jbsc.objects.types.*;
 
 public abstract class AbstractEntityVisitor implements IEntityVisitor {
 
+	@Override
+	public int init(Entity entity) {
+		return CONTINUE;
+	}
+	
 	@Override
 	public int visit(Entity entity) {
 		return CONTINUE;

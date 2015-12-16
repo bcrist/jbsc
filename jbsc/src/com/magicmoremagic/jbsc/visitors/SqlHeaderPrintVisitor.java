@@ -8,6 +8,7 @@ import com.magicmoremagic.jbsc.OutputFileType;
 import com.magicmoremagic.jbsc.objects.base.Entity;
 import com.magicmoremagic.jbsc.objects.containers.Namespace;
 import com.magicmoremagic.jbsc.objects.containers.Spec;
+import com.magicmoremagic.jbsc.visitors.base.AbstractHeaderPrintVisitor;
 
 public class SqlHeaderPrintVisitor extends AbstractHeaderPrintVisitor {
 

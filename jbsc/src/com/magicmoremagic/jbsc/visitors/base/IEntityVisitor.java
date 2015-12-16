@@ -1,4 +1,4 @@
-package com.magicmoremagic.jbsc.visitors;
+package com.magicmoremagic.jbsc.visitors.base;
 
 import com.magicmoremagic.jbsc.objects.Function;
 import com.magicmoremagic.jbsc.objects.base.Entity;
@@ -14,6 +14,8 @@ public interface IEntityVisitor {
 	public static final int CANCEL_SIBLINGS = 1 << 2;
 	public static final int CANCEL_PARENTS = CANCEL_CHILDREN; // only used for parent chain visitation
 	public static final int STOP = 1 << 3;
+	
+	int init(Entity entity);
 	
 	int visit(Entity entity);
 	int leave(Entity entity);

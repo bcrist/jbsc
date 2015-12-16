@@ -1,6 +1,6 @@
 package com.magicmoremagic.jbsc.objects.base;
 
-import static com.magicmoremagic.jbsc.visitors.IEntityVisitor.*;
+import static com.magicmoremagic.jbsc.visitors.base.IEntityVisitor.*;
 
 import java.util.*;
 
@@ -8,7 +8,9 @@ import com.magicmoremagic.jbsc.objects.Flag;
 import com.magicmoremagic.jbsc.objects.containers.Namespace;
 import com.magicmoremagic.jbsc.objects.containers.Spec;
 import com.magicmoremagic.jbsc.util.CodeGenConfig;
-import com.magicmoremagic.jbsc.visitors.IEntityVisitor;
+import com.magicmoremagic.jbsc.visitors.base.IEntityVisitor;
+import com.magicmoremagic.jbsc.visitors.parentchain.GetNamespaceQualifiedCodeNameVisitor;
+import com.magicmoremagic.jbsc.visitors.parentchain.GetQualifiedNameVisitor;
 
 public abstract class Entity {
 
@@ -63,14 +65,8 @@ public abstract class Entity {
 	}
 	
 	public Namespace getNamespace() {
-		return getClosestAncestor(Namespace.class);
-	}
-
-	@SuppressWarnings("unchecked")
-	public <T extends EntityContainer> T getClosestAncestor(Class<T> ancestorClass) {
-		for (EntityContainer c = getParent(); c != null; c = c.getParent()) {
-			if (ancestorClass.isInstance(c))
-				return (T)c;
+		for (EntityContainer parent = getParent(); parent != null; parent = parent.getParent()) {
+			if (parent instanceof Namespace) return (Namespace)parent;
 		}
 		return null;
 	}
@@ -81,37 +77,21 @@ public abstract class Entity {
 
 	final public String getQualifiedName() {
 		if (qualifiedName == null) {
-			qualifiedName = getQualifiedName(CodeGenConfig.QUALIFIED_NAME_SEPARATOR, Entity.class);
+			GetQualifiedNameVisitor visitor = new GetQualifiedNameVisitor();
+			visitParentChain(visitor);
+			qualifiedName = visitor.toString();
 		}
 		return qualifiedName;
 	}
-
-	final public String getQualifiedName(String separator, Class<? extends Entity> filterClass) {
-		if (parent != null) {
-			StringBuilder sb = new StringBuilder();
-			parent.appendQualifiedName(sb, separator, filterClass);
-			if (sb.length() > 0)
-				sb.append(separator);
-			sb.append(getName());
-			return sb.toString();
-		} else {
-			return getName();
-		}
-	}
-
-	protected boolean shouldIncludeNameInQualifiedNames() {
-		return true;
+	
+	public String getUnqualifiedCodeName() {
+		return getName();
 	}
 	
-	final protected <T extends Entity> void appendQualifiedName(StringBuilder sb, String separator, Class<T> filterClass) {
-		boolean addMe = filterClass.isInstance(this) && shouldIncludeNameInQualifiedNames();
-		if (parent != null) {
-			parent.appendQualifiedName(sb, separator, filterClass);
-			if (sb.length() > 0 && addMe)
-				sb.append(separator);
-		}
-		if (addMe)
-			sb.append(getName());
+	public String getQualifiedCodeName(Namespace fromNamespace) {
+		GetNamespaceQualifiedCodeNameVisitor visitor = new GetNamespaceQualifiedCodeNameVisitor(fromNamespace);
+		visitParentChain(visitor);
+		return visitor.toString();
 	}
 
 	public Entity setName(String name) {
@@ -132,47 +112,6 @@ public abstract class Entity {
 		} else {
 			name = newName;
 		}
-	}
-
-	public String getUnqualifiedCodeName() {
-		return getName();
-	}
-
-	public String getCodeName(Namespace viewedFromNamespace) {
-		Namespace commonAncestor = EntityContainer.findCommonAncestor(this, viewedFromNamespace, Namespace.class);
-		StringBuilder sb = new StringBuilder();
-		if (commonAncestor == null) {
-			sb.append("::");
-		}
-		appendQualifiedCodeName(sb, commonAncestor);
-		return sb.toString();
-	}
-	
-	final protected void appendQualifiedCodeName(StringBuilder sb, Namespace stopAt) {
-		
-		
-		if (parent != null && this != stopAt) {
-			if (parent.appendNamespace(sb, stopAt))
-				sb.append("::");
-		}
-		sb.append(getUnqualifiedCodeName());
-	}
-	
-	final protected boolean appendNamespace(StringBuilder sb, Namespace stopAt) {
-		if (this == stopAt) return false;
-		
-		boolean addMe = this instanceof Namespace;
-		boolean notEmpty = addMe;
-		if (parent != null && this != stopAt) {
-			if (parent.appendNamespace(sb, stopAt) && addMe) {
-				sb.append("::");
-				notEmpty = true;
-			}
-		}
-		if (addMe)
-			sb.append(getUnqualifiedCodeName());
-		
-		return notEmpty;
 	}
 
 	public Set<String> getRequiredIncludes() {
@@ -258,6 +197,12 @@ public abstract class Entity {
 	}
 
 	public int visit(IEntityVisitor visitor) {
+		int result = visitor.init(this);
+		if ((result & STOP) != 0) return STOP;
+		return continueVisit(visitor);
+	}
+	
+	protected int continueVisit(IEntityVisitor visitor) {
 		int result = onVisitorVisit(visitor);
 		if ((result & (STOP | CANCEL_THIS)) == 0)
 			result |= onVisitorLeave(visitor);
@@ -266,12 +211,18 @@ public abstract class Entity {
 	}
 	
 	public int visitParentChain(IEntityVisitor visitor) {
+		int result = visitor.init(this);
+		if ((result & STOP) != 0) return STOP;
+		return continueVisitParentChain(visitor);
+	}
+	
+	protected int continueVisitParentChain(IEntityVisitor visitor) {
 		int result = onVisitorVisit(visitor);
 		
 		if ((result & STOP) != 0) return STOP;
 			
 		if ((result & CANCEL_PARENTS) == 0 && getParent() != null)
-			result |= getParent().visitParentChain(visitor);
+			result |= getParent().continueVisitParentChain(visitor);
 		
 		if ((result & STOP) != 0) return STOP;
 			

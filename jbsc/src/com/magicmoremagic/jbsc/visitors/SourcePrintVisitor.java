@@ -9,6 +9,8 @@ import com.magicmoremagic.jbsc.objects.base.Entity;
 import com.magicmoremagic.jbsc.objects.containers.Spec;
 import com.magicmoremagic.jbsc.util.CodeGenConfig;
 import com.magicmoremagic.jbsc.util.CodeGenHelper;
+import com.magicmoremagic.jbsc.visitors.base.AbstractPrintVisitor;
+import com.magicmoremagic.jbsc.visitors.base.AbstractSelectionVisitor;
 
 public class SourcePrintVisitor extends AbstractPrintVisitor {
 

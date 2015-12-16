@@ -1,11 +1,11 @@
 package com.magicmoremagic.jbsc.objects.base;
 
-import static com.magicmoremagic.jbsc.visitors.IEntityVisitor.*;
+import static com.magicmoremagic.jbsc.visitors.base.IEntityVisitor.*;
 
 import java.util.*;
 
 import com.magicmoremagic.jbsc.util.CodeGenConfig;
-import com.magicmoremagic.jbsc.visitors.IEntityVisitor;
+import com.magicmoremagic.jbsc.visitors.base.IEntityVisitor;
 
 public abstract class EntityContainer extends Entity {
 
@@ -110,6 +110,13 @@ public abstract class EntityContainer extends Entity {
 	
 	@Override
 	public int visit(IEntityVisitor visitor) {
+		int result = visitor.init(this);
+		if ((result & STOP) != 0) return STOP;
+		return continueVisit(visitor);
+	}
+	
+	@Override
+	protected int continueVisit(IEntityVisitor visitor) {
 		int result = onVisitorVisit(visitor);
 		
 		if ((result & STOP) != 0) return STOP;
@@ -127,7 +134,7 @@ public abstract class EntityContainer extends Entity {
 	
 	protected int visitChildren(IEntityVisitor visitor) {
 		for (Entity child : children.values()) {
-			int result = child.visit(visitor);
+			int result = child.continueVisit(visitor);
 			
 			if ((result & STOP) != 0) return STOP;
 			if ((result & CANCEL_SIBLINGS) != 0) break;

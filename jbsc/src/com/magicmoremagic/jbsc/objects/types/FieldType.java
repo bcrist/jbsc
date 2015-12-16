@@ -5,7 +5,7 @@ import java.util.Collection;
 import com.magicmoremagic.jbsc.objects.Function;
 import com.magicmoremagic.jbsc.objects.FunctionType;
 import com.magicmoremagic.jbsc.objects.base.Entity;
-import com.magicmoremagic.jbsc.visitors.IEntityVisitor;
+import com.magicmoremagic.jbsc.visitors.base.IEntityVisitor;
 
 public abstract class FieldType extends Entity {
 

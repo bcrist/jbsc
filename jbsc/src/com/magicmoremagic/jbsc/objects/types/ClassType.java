@@ -8,7 +8,7 @@ import com.magicmoremagic.jbsc.objects.base.Entity;
 import com.magicmoremagic.jbsc.objects.base.EntityContainer;
 import com.magicmoremagic.jbsc.objects.containers.Spec;
 import com.magicmoremagic.jbsc.util.CodeGenHelper;
-import com.magicmoremagic.jbsc.visitors.IEntityVisitor;
+import com.magicmoremagic.jbsc.visitors.base.IEntityVisitor;
 
 public class ClassType extends FieldType {
 
@@ -226,7 +226,7 @@ public class ClassType extends FieldType {
 					continue;
 				
 				sb.append("if (!");
-				sb.append(ref.getType().getFunction(getFunctionType()).getCodeName(getNamespace()));
+				sb.append(ref.getType().getFunction(getFunctionType()).getQualifiedCodeName(getNamespace()));
 				sb.append("(bed, stmt, ");
 				if (getFunctionType() == FunctionType.PARSE) {
 					sb.append("column + ");
@@ -303,7 +303,7 @@ public class ClassType extends FieldType {
 			
 			String qualifiedBedName;
 			try {
-				qualifiedBedName = getParent().lookupName("be.bed.Bed").getCodeName(getNamespace());
+				qualifiedBedName = getParent().lookupName("be.bed.Bed").getQualifiedCodeName(getNamespace());
 			} catch (NullPointerException e) {
 				qualifiedBedName = "::be::bed::Bed";
 			}
@@ -313,7 +313,7 @@ public class ClassType extends FieldType {
 			
 			String qualifiedCachedStmtName;
 			try {
-				qualifiedCachedStmtName = getParent().lookupName("be.bed.CachedStmt").getCodeName(getNamespace());
+				qualifiedCachedStmtName = getParent().lookupName("be.bed.CachedStmt").getQualifiedCodeName(getNamespace());
 			} catch (NullPointerException e) {
 				qualifiedCachedStmtName = "::be::bed::CachedStmt";
 			}
@@ -368,7 +368,7 @@ public class ClassType extends FieldType {
 			
 			String qualifiedBedName;
 			try {
-				qualifiedBedName = getParent().lookupName("be.bed.Bed").getCodeName(getNamespace());
+				qualifiedBedName = getParent().lookupName("be.bed.Bed").getQualifiedCodeName(getNamespace());
 			} catch (NullPointerException e) {
 				qualifiedBedName = "::be::bed::Bed";
 			}
@@ -378,7 +378,7 @@ public class ClassType extends FieldType {
 			
 			String qualifiedCachedStmtName;
 			try {
-				qualifiedCachedStmtName = getParent().lookupName("be.bed.CachedStmt").getCodeName(getNamespace());
+				qualifiedCachedStmtName = getParent().lookupName("be.bed.CachedStmt").getQualifiedCodeName(getNamespace());
 			} catch (NullPointerException e) {
 				qualifiedCachedStmtName = "::be::bed::CachedStmt";
 			}

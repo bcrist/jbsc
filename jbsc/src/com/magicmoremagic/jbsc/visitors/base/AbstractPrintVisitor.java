@@ -1,4 +1,4 @@
-package com.magicmoremagic.jbsc.visitors;
+package com.magicmoremagic.jbsc.visitors.base;
 
 import java.io.PrintWriter;
 import java.util.*;
@@ -65,7 +65,7 @@ public abstract class AbstractPrintVisitor extends AbstractEntityVisitor {
 	@Override
 	public int leave(Namespace namespace) {
 		writer.print("} // namespace ");
-		writer.println(namespace.getQualifiedName("::", Namespace.class));
+		writer.println(namespace.getQualifiedCodeName(null));
 		writer.println();
 		return CONTINUE;
 	}

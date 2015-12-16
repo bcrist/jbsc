@@ -6,7 +6,8 @@ import java.util.Set;
 import com.magicmoremagic.jbsc.objects.base.Entity;
 import com.magicmoremagic.jbsc.objects.containers.Spec;
 import com.magicmoremagic.jbsc.util.CodeGenConfig;
-import com.magicmoremagic.jbsc.visitors.*;
+import com.magicmoremagic.jbsc.visitors.base.*;
+import com.magicmoremagic.jbsc.visitors.collections.*;
 
 public enum OutputFileType {
 

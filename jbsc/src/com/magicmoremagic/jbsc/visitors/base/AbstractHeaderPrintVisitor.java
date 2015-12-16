@@ -1,4 +1,4 @@
-package com.magicmoremagic.jbsc.visitors;
+package com.magicmoremagic.jbsc.visitors.base;
 
 import java.io.PrintWriter;
 import java.util.Set;

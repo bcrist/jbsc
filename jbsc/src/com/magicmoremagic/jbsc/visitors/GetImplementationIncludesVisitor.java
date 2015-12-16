@@ -3,6 +3,7 @@ package com.magicmoremagic.jbsc.visitors;
 import java.util.Set;
 
 import com.magicmoremagic.jbsc.objects.base.Entity;
+import com.magicmoremagic.jbsc.visitors.base.AbstractSelectionVisitor;
 
 public class GetImplementationIncludesVisitor extends AbstractSelectionVisitor<String> {
 

@@ -1,4 +1,4 @@
-package com.magicmoremagic.jbsc.visitors;
+package com.magicmoremagic.jbsc.visitors.base;
 
 import java.util.Set;
 
@@ -25,6 +25,11 @@ public abstract class AbstractShouldPrintVisitor implements IEntityVisitor {
 		return shouldPrint ? STOP : CONTINUE;
 	}
 
+	@Override
+	public int init(Entity entity) {
+		return CONTINUE;
+	}
+	
 	@Override
 	public int visit(Entity entity) {
 		if (shouldPrint)

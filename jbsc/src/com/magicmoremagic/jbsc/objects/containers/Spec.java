@@ -6,7 +6,7 @@ import java.util.*;
 import com.magicmoremagic.jbsc.OutputFileType;
 import com.magicmoremagic.jbsc.objects.base.Entity;
 import com.magicmoremagic.jbsc.objects.base.EntityContainer;
-import com.magicmoremagic.jbsc.visitors.IEntityVisitor;
+import com.magicmoremagic.jbsc.visitors.base.IEntityVisitor;
 
 public class Spec extends EntityContainer {
 
@@ -38,11 +38,6 @@ public class Spec extends EntityContainer {
 			throw new UnsupportedOperationException();
 		
 		return this;
-	}
-	
-	@Override
-	protected boolean shouldIncludeNameInQualifiedNames() {
-		return false;
 	}
 	
 	@Override

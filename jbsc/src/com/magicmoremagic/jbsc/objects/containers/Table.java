@@ -5,7 +5,7 @@ import java.util.*;
 import com.magicmoremagic.jbsc.objects.base.EntityContainer;
 import com.magicmoremagic.jbsc.objects.types.*;
 import com.magicmoremagic.jbsc.util.CodeGenHelper;
-import com.magicmoremagic.jbsc.visitors.IEntityVisitor;
+import com.magicmoremagic.jbsc.visitors.base.IEntityVisitor;
 
 public class Table extends EntityContainer {
 
