@@ -61,6 +61,11 @@ public class ClassType extends FieldType {
 		}
 	}
 	
+	@Override
+	public String getUnqualifiedCodeName() {
+		return className;
+	}
+	
 	public String getClassName() {
 		return className;
 	}
@@ -212,7 +217,7 @@ public class ClassType extends FieldType {
 					continue;
 				
 				sb.append("if (!");
-				sb.append(ref.getType().getFunction(getFunctionType()).getName());
+				sb.append(ref.getType().getFunction(getFunctionType()).getCodeName(getNamespace()));
 				sb.append("(bed, stmt, ");
 				if (getFunctionType() == FunctionType.PARSE) {
 					sb.append("column + ");
@@ -269,25 +274,44 @@ public class ClassType extends FieldType {
 
 		@Override
 		public Function printDeclaration(PrintWriter writer) {
-			writer.print("inline bool ");
-			writer.print(getName());
-			writer.print("(::be::bed::Bed& bed, ::be::bed::CachedStmt& stmt, int parameter, ");
-			if (!isAssignByValue()) {
-				writer.print("const ");
-			}
-			writer.print(className);
-			if (!isAssignByValue()) {
-				writer.print("&");
-			}
-			writer.println(" value);");
+			printSignature(writer);
+			writer.println(";");
 			return this;
 		}
 
 		@Override
 		public Function printImplementation(PrintWriter writer) {
+			printSignature(writer);
+			writer.println();
+			printFunctionBodyWithReturnTrue(writer);
+			return this;
+		}
+		
+		private void printSignature(PrintWriter writer) {
 			writer.print("inline bool ");
-			writer.print(getName());
-			writer.print("(::be::bed::Bed& bed, ::be::bed::CachedStmt& stmt, int parameter, ");
+			writer.print(getUnqualifiedCodeName());
+			writer.print('(');
+			
+			String qualifiedBedName;
+			try {
+				qualifiedBedName = getParent().lookupName("be.bed.Bed").getCodeName(getNamespace());
+			} catch (NullPointerException e) {
+				qualifiedBedName = "::be::bed::Bed";
+			}
+			
+			writer.print(qualifiedBedName);
+			writer.print("& bed, ");
+			
+			String qualifiedCachedStmtName;
+			try {
+				qualifiedCachedStmtName = getParent().lookupName("be.bed.CachedStmt").getCodeName(getNamespace());
+			} catch (NullPointerException e) {
+				qualifiedCachedStmtName = "::be::bed::CachedStmt";
+			}
+
+			writer.print(qualifiedCachedStmtName);
+			writer.print("& stmt, int parameter, ");
+			
 			if (!isAssignByValue()) {
 				writer.print("const ");
 			}
@@ -295,10 +319,7 @@ public class ClassType extends FieldType {
 			if (!isAssignByValue()) {
 				writer.print("&");
 			}
-			writer.println(" value)");
-			
-			printFunctionBodyWithReturnTrue(writer);
-			return this;
+			writer.print(" value)");
 		}
 		
 	}
@@ -317,24 +338,46 @@ public class ClassType extends FieldType {
 
 		@Override
 		public Function printDeclaration(PrintWriter writer) {
-			writer.print("inline bool ");
-			writer.print(getName());
-			writer.print("(::be::bed::Bed& bed, ::be::bed::CachedStmt& stmt, int column, ");
-			writer.print(className);
-			writer.println("& value);");
+			printSignature(writer);
+			writer.println();
+			writer.println(";");
 			return this;
 		}
 
 		@Override
 		public Function printImplementation(PrintWriter writer) {
-			writer.print("inline bool ");
-			writer.print(getName());
-			writer.print("(::be::bed::Bed& bed, ::be::bed::CachedStmt& stmt, int column, ");
-			writer.print(className);
-			writer.println("& value)");
-			
+			printSignature(writer);
+			writer.println();
 			printFunctionBodyWithReturnTrue(writer);
 			return this;
+		}
+		
+		private void printSignature(PrintWriter writer) {
+			writer.print("inline bool ");
+			writer.print(getUnqualifiedCodeName());
+			writer.print('(');
+			
+			String qualifiedBedName;
+			try {
+				qualifiedBedName = getParent().lookupName("be.bed.Bed").getCodeName(getNamespace());
+			} catch (NullPointerException e) {
+				qualifiedBedName = "::be::bed::Bed";
+			}
+			
+			writer.print(qualifiedBedName);
+			writer.print("& bed, ");
+			
+			String qualifiedCachedStmtName;
+			try {
+				qualifiedCachedStmtName = getParent().lookupName("be.bed.CachedStmt").getCodeName(getNamespace());
+			} catch (NullPointerException e) {
+				qualifiedCachedStmtName = "::be::bed::CachedStmt";
+			}
+
+			writer.print(qualifiedCachedStmtName);
+			writer.print("& stmt, int column, ");
+			writer.print(className);
+			writer.print("& value)");
 		}
 		
 	}

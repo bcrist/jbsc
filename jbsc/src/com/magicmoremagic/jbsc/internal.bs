@@ -1,0 +1,13 @@
+namespace be {
+namespace bed {
+
+type Bed {
+	class "Bed";
+}
+
+type CachedStmt {
+	class "CachedStmt";
+}
+ 
+}
+}

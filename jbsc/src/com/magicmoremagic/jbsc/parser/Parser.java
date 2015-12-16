@@ -1,6 +1,7 @@
 package com.magicmoremagic.jbsc.parser;
 
 import java.io.IOException;
+import java.io.Reader;
 import java.nio.file.Path;
 import java.util.*;
 
@@ -12,7 +13,6 @@ import com.magicmoremagic.jbsc.objects.containers.Namespace;
 import com.magicmoremagic.jbsc.objects.containers.Spec;
 import com.magicmoremagic.jbsc.objects.types.*;
 import com.magicmoremagic.jbsc.parser.Lexer.Mark;
-import com.magicmoremagic.jbsc.test.JBSC;
 
 public class Parser {
 
@@ -27,7 +27,13 @@ public class Parser {
 	
 	public Parser(Path filePath, IErrorHandler errorHandler) {
 		this.specPath = filePath;
-		lexer = new Lexer(filePath, errorHandler);
+		this.lexer = new Lexer(filePath, errorHandler);
+		this.errorHandler = errorHandler;
+	}
+	
+	public Parser(Reader inputReader, Path specPath, IErrorHandler errorHandler) {
+		this.specPath = specPath;
+		this.lexer = new Lexer(inputReader, specPath.toString(), errorHandler);
 		this.errorHandler = errorHandler;
 	}
 	
@@ -46,7 +52,10 @@ public class Parser {
 		
 		Spec spec = new Spec();
 		spec.setInputPath(specPath);
-		JBSC.app.addSpec(specPath, spec);
+		if (specPath != JBSC.INTERNAL_PATH) {
+			spec.addIncludedSpec(JBSC.app.getInternalSpec());
+			JBSC.app.addSpec(specPath, spec);
+		}
 		pSpec(spec);
 		return spec;
 	}

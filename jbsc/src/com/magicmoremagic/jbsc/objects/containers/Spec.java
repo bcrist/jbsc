@@ -40,6 +40,16 @@ public class Spec extends EntityContainer {
 		return this;
 	}
 	
+	@Override
+	protected boolean shouldIncludeNameInQualifiedNames() {
+		return false;
+	}
+	
+	@Override
+	public String getUnqualifiedCodeName() {
+		return null;
+	}
+	
 	public int getErrorCount() {
 		return errorCount;
 	}

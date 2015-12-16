@@ -26,6 +26,7 @@ public class GetRequiredIncludesVisitor extends AbstractSelectionVisitor<String>
 	@Override
 	public int visit(Spec spec) {
 		for (Spec s : spec.getIncludedSpecs()) {
+			if (s.getName() == null) continue;
 			selections.add('"' + s.getOutputFileName(OutputFileType.HEADER) + '"');
 		}
 		return CONTINUE;

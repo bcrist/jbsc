@@ -62,6 +62,11 @@ public class ColType extends FieldType {
 		}
 	}
 	
+	@Override
+	public String getUnqualifiedCodeName() {
+		return CodeGenHelper.toPascalCase(name);
+	}
+	
 	public String getAffinity() {
 		return affinity;
 	}
@@ -162,21 +167,44 @@ public class ColType extends FieldType {
 
 		@Override
 		public Function printDeclaration(PrintWriter writer) {
-			writer.println("template <typename T>");
-			writer.print("bool ");
-			writer.print(getName());
-			writer.println("(::be::bed::Bed& bed, ::be::bed::CachedStmt& stmt, int parameter, const T& value);");
+			printSignature(writer);
+			writer.println(";");
 			return this;
 		}
 
 		@Override
 		public Function printImplementation(PrintWriter writer) {
-			writer.println("template <typename T>");
-			writer.print("bool ");
-			writer.print(getName());
-			writer.println("(::be::bed::Bed& bed, ::be::bed::CachedStmt& stmt, int parameter, const T& value)");
+			printSignature(writer);
+			writer.println();
 			printFunctionBodyWithReturnTrue(writer);
 			return this;
+		}
+		
+		private void printSignature(PrintWriter writer) {
+			writer.println("template <typename T>");
+			writer.print("bool ");
+			writer.print(getUnqualifiedCodeName());
+			writer.print('(');
+			
+			String qualifiedBedName;
+			try {
+				qualifiedBedName = getParent().lookupName("be.bed.Bed").getCodeName(getNamespace());
+			} catch (NullPointerException e) {
+				qualifiedBedName = "::be::bed::Bed";
+			}
+			
+			writer.print(qualifiedBedName);
+			writer.print("& bed, ");
+			
+			String qualifiedCachedStmtName;
+			try {
+				qualifiedCachedStmtName = getParent().lookupName("be.bed.CachedStmt").getCodeName(getNamespace());
+			} catch (NullPointerException e) {
+				qualifiedCachedStmtName = "::be::bed::CachedStmt";
+			}
+
+			writer.print(qualifiedCachedStmtName);
+			writer.print("& stmt, int parameter, const T& value)");
 		}
 		
 	}
@@ -209,21 +237,44 @@ public class ColType extends FieldType {
 
 		@Override
 		public Function printDeclaration(PrintWriter writer) {
-			writer.println("template <typename T>");
-			writer.print("bool ");
-			writer.print(getName());
-			writer.println("(::be::bed::Bed& bed, ::be::bed::CachedStmt& stmt, int column, T& value);");
+			printSignature(writer);
+			writer.println(";");
 			return this;
 		}
 
 		@Override
 		public Function printImplementation(PrintWriter writer) {
-			writer.println("template <typename T>");
-			writer.print("bool ");
-			writer.print(getName());
-			writer.println("(::be::bed::Bed& bed, ::be::bed::CachedStmt& stmt, int column, T& value)");
+			printSignature(writer);
+			writer.println();
 			printFunctionBodyWithReturnTrue(writer);
 			return this;
+		}
+	
+		private void printSignature(PrintWriter writer) {
+			writer.println("template <typename T>");
+			writer.print("bool ");
+			writer.print(getUnqualifiedCodeName());
+			writer.print('(');
+			
+			String qualifiedBedName;
+			try {
+				qualifiedBedName = getParent().lookupName("be.bed.Bed").getCodeName(getNamespace());
+			} catch (NullPointerException e) {
+				qualifiedBedName = "::be::bed::Bed";
+			}
+			
+			writer.print(qualifiedBedName);
+			writer.print("& bed, ");
+			
+			String qualifiedCachedStmtName;
+			try {
+				qualifiedCachedStmtName = getParent().lookupName("be.bed.CachedStmt").getCodeName(getNamespace());
+			} catch (NullPointerException e) {
+				qualifiedCachedStmtName = "::be::bed::CachedStmt";
+			}
+
+			writer.print(qualifiedCachedStmtName);
+			writer.print("& stmt, int column, const T& value)");
 		}
 		
 	}

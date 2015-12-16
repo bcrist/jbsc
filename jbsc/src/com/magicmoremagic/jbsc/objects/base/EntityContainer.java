@@ -5,7 +5,7 @@ import java.util.*;
 import com.magicmoremagic.jbsc.util.CodeGenConfig;
 import com.magicmoremagic.jbsc.visitors.IEntityVisitor;
 
-public class EntityContainer extends Entity {
+public abstract class EntityContainer extends Entity {
 
 	protected Map<String, Entity> children;
 	protected Collection<Entity> unmodChildren;
@@ -145,6 +145,27 @@ public class EntityContainer extends Entity {
 	
 	protected int acceptVisitorLeave(IEntityVisitor visitor) {
 		return visitor.leave(this);
+	}
+	
+	// find's the closest common ancestor of a specific type shared by both entities
+	@SuppressWarnings("unchecked")
+	public static <T> T findCommonAncestor(Entity a, Entity b, Class<T> ancestorType) {
+		List<Entity> ancestors = new ArrayList<>();
+		for (Entity aa = a; aa != null; aa = aa.getParent()) {
+			if (ancestorType.isInstance(aa)) {
+				ancestors.add(aa);
+			}
+		}
+		
+		for (Entity bb = b; bb != null; bb = bb.getParent()) {
+			String bbqn = bb.getQualifiedName();
+			for (Entity aa : ancestors) {
+				if (bbqn.equals(aa.getQualifiedName()) && aa.getClass().equals(bb.getClass()))
+					return (T)aa;
+			}
+		}
+		
+		return null;
 	}
 	
 }

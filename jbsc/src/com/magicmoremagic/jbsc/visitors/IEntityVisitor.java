@@ -3,8 +3,7 @@ package com.magicmoremagic.jbsc.visitors;
 import com.magicmoremagic.jbsc.objects.Function;
 import com.magicmoremagic.jbsc.objects.base.Entity;
 import com.magicmoremagic.jbsc.objects.base.EntityContainer;
-import com.magicmoremagic.jbsc.objects.containers.Namespace;
-import com.magicmoremagic.jbsc.objects.containers.Spec;
+import com.magicmoremagic.jbsc.objects.containers.*;
 import com.magicmoremagic.jbsc.objects.types.*;
 
 public interface IEntityVisitor {
@@ -24,9 +23,11 @@ public interface IEntityVisitor {
 	int visit(EntityContainer container);
 	int visit(Spec spec);
 	int visit(Namespace namespace);
+	int visit(Table table);
 	
 	int leave(EntityContainer container);
 	int leave(Spec spec);
 	int leave(Namespace namespace);
+	int leave(Table table);
 
 }

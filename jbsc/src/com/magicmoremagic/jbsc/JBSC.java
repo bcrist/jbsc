@@ -1,4 +1,4 @@
-package com.magicmoremagic.jbsc.test;
+package com.magicmoremagic.jbsc;
 
 import java.io.*;
 import java.nio.file.*;
@@ -6,7 +6,6 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.magicmoremagic.jbsc.*;
 import com.magicmoremagic.jbsc.objects.containers.Spec;
 import com.magicmoremagic.jbsc.parser.Parser;
 import com.magicmoremagic.jbsc.util.IndentingPrintWriter;
@@ -14,6 +13,8 @@ import com.magicmoremagic.jbsc.util.IndentingPrintWriter;
 public class JBSC {
 	
 	private static final boolean USE_STDOUT = true;
+	
+	public static final Path INTERNAL_PATH = Paths.get("__internal__");
 	
 	public static JBSC app;
 	
@@ -23,6 +24,7 @@ public class JBSC {
 	private Path includeOutputDirectory;
 	private Path sourceOutputDirectory;
 	
+	private Spec internal;
 	private Map<Path, Spec> parsedSpecs;
 	
 	public JBSC(String specDirectory, String includeOutputDirectory, String sourceOutputDirectory) throws Exception {
@@ -30,6 +32,13 @@ public class JBSC {
 		this.includeOutputDirectory = getDirectoryPath(includeOutputDirectory);
 		this.sourceOutputDirectory = getDirectoryPath(sourceOutputDirectory);
 		parsedSpecs = new HashMap<>();
+		
+		ErrorHandler errorHandler = new ErrorHandler();
+		InputStreamReader reader = new InputStreamReader(JBSC.class.getResourceAsStream("/com/magicmoremagic/jbsc/internal.bs"));
+		Parser parser = new Parser(reader, INTERNAL_PATH, errorHandler);
+		internal = parser.parse();
+		internal.setErrorCount(errorHandler.getErrorCount());
+		internal.setWarningCount(errorHandler.getWarningCount());
 	}
 	
 	public Path getDirectoryPath(String dir) throws IOException {
@@ -45,6 +54,10 @@ public class JBSC {
 	
 	public Spec getSpec(String specFileName) {
 		return getSpec(specDirectory.resolve(specFileName));
+	}
+	
+	public Spec getInternalSpec() {
+		return internal;
 	}
 	
 	public Spec getSpec(Path specPath) {

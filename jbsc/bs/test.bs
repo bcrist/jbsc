@@ -198,3 +198,6 @@ type I8 {
 
 } // namespace be::bs
 } // namespace be
+namespace asdf {
+type AA { class "int"; fields be.bs.nullable_numeric; }
+}
