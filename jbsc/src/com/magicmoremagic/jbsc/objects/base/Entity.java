@@ -42,12 +42,12 @@ public abstract class Entity {
 	}
 
 	public Spec getSpec() {
+		if (spec == null) {
+			if (parent != null) {
+				spec = parent.getSpec();
+			}
+		}
 		return spec;
-	}
-
-	public Entity setSpec(Spec spec) {
-		this.spec = spec;
-		return this;
 	}
 
 	final public EntityContainer getParent() {
@@ -56,21 +56,24 @@ public abstract class Entity {
 
 	final void setParent(EntityContainer parent) {
 		qualifiedName = null;
+		spec = null;
 		trySetParent(parent);
 	}
 
 	protected void trySetParent(EntityContainer newParent) {
 		qualifiedName = null;
+		spec = null;
 		this.parent = newParent;
 	}
-	
+
 	public Namespace getNamespace() {
-		for (EntityContainer parent = getParent(); parent != null; parent = parent.getParent()) {
-			if (parent instanceof Namespace) return (Namespace)parent;
+		for (Entity parent = this; parent != null; parent = parent.getParent()) {
+			if (parent instanceof Namespace)
+				return (Namespace) parent;
 		}
 		return null;
 	}
-	
+
 	final public String getName() {
 		return name;
 	}
@@ -83,11 +86,11 @@ public abstract class Entity {
 		}
 		return qualifiedName;
 	}
-	
+
 	public String getUnqualifiedCodeName() {
 		return getName();
 	}
-	
+
 	public String getQualifiedCodeName(Namespace fromNamespace) {
 		GetNamespaceQualifiedCodeNameVisitor visitor = new GetNamespaceQualifiedCodeNameVisitor(fromNamespace);
 		visitParentChain(visitor);
@@ -198,46 +201,50 @@ public abstract class Entity {
 
 	public int visit(IEntityVisitor visitor) {
 		int result = visitor.init(this);
-		if ((result & STOP) != 0) return STOP;
+		if ((result & STOP) != 0)
+			return STOP;
 		return continueVisit(visitor);
 	}
-	
+
 	protected int continueVisit(IEntityVisitor visitor) {
 		int result = onVisitorVisit(visitor);
 		if ((result & (STOP | CANCEL_THIS)) == 0)
 			result |= onVisitorLeave(visitor);
-		
+
 		return result;
 	}
-	
+
 	public int visitParentChain(IEntityVisitor visitor) {
 		int result = visitor.init(this);
-		if ((result & STOP) != 0) return STOP;
+		if ((result & STOP) != 0)
+			return STOP;
 		return continueVisitParentChain(visitor);
 	}
-	
+
 	protected int continueVisitParentChain(IEntityVisitor visitor) {
 		int result = onVisitorVisit(visitor);
-		
-		if ((result & STOP) != 0) return STOP;
-			
+
+		if ((result & STOP) != 0)
+			return STOP;
+
 		if ((result & CANCEL_PARENTS) == 0 && getParent() != null)
 			result |= getParent().continueVisitParentChain(visitor);
-		
-		if ((result & STOP) != 0) return STOP;
-			
+
+		if ((result & STOP) != 0)
+			return STOP;
+
 		if ((result & CANCEL_THIS) == 0)
 			result |= onVisitorLeave(visitor);
-		
+
 		return CONTINUE;
 	}
-	
+
 	protected int onVisitorVisit(IEntityVisitor visitor) {
 		return visitor.visit(this);
 	}
-	
+
 	protected int onVisitorLeave(IEntityVisitor visitor) {
 		return visitor.leave(this);
 	}
-	
+
 }

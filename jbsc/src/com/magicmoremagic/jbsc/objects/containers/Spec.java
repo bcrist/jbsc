@@ -33,14 +33,6 @@ public class Spec extends EntityContainer {
 	}
 	
 	@Override
-	public Entity setSpec(Spec spec) {
-		if (spec != this)
-			throw new UnsupportedOperationException();
-		
-		return this;
-	}
-	
-	@Override
 	public String getUnqualifiedCodeName() {
 		return null;
 	}
@@ -105,22 +97,12 @@ public class Spec extends EntityContainer {
 		return this;
 	}
 	
-	@Override
-	public Entity lookupName(String name) {
-		{
-			// look in this spec first
-			Entity entity = super.lookupName(name);
-			if (entity != null)
-				return entity;
-		}
-		
-		// look in included specs
+	public Entity lookupIncludedName(String name) {
 		for (Spec includedSpec : includedSpecs) {
 			Entity entity = includedSpec.lookupName(name);
 			if (entity != null)
 				return entity;	
 		}
-		
 		return null;
 	}
 	

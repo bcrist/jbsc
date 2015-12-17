@@ -5,9 +5,7 @@ import java.util.*;
 
 import com.magicmoremagic.jbsc.objects.Function;
 import com.magicmoremagic.jbsc.objects.FunctionType;
-import com.magicmoremagic.jbsc.objects.base.Entity;
 import com.magicmoremagic.jbsc.objects.base.EntityContainer;
-import com.magicmoremagic.jbsc.objects.containers.Spec;
 import com.magicmoremagic.jbsc.util.CodeGenHelper;
 import com.magicmoremagic.jbsc.visitors.base.IEntityVisitor;
 
@@ -137,16 +135,6 @@ public class ColType extends FieldType {
 		@Override
 		public boolean isImplementationInline() {
 			return true;
-		}
-		
-		@Override
-		public Spec getSpec() {
-			return spec;
-		}
-		
-		@Override
-		public Entity setSpec(Spec spec) {
-			throw new UnsupportedOperationException();
 		}
 		
 		@Override

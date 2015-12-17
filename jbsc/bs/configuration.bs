@@ -1,0 +1,268 @@
+// Copyright (c) 2013 - 2015 Benjamin Crist
+// See LICENSE file for details
+
+///////////////////////////////////////////////////////////////////////////////
+/// \file   configuration.bs
+/// \author Benjamin Crist
+
+include "types.bs";
+
+spec "be/bs/configuration";
+
+namespace be {
+namespace bs {
+
+namespace detail {
+
+inline code <[[
+///////////////////////////////////////////////////////////////////////////////
+class SaveConfigurationPropertyVisitor : public boost::static_visitor<>
+{
+public:
+   void operator()(bool value) const
+   {
+      U8 data = value ? 1 : 0;
+      stmt->bindBlob(parameter, &data, 1);
+   }
+
+   void operator()(const I64& value) const
+   {
+      stmt->bind(parameter, value);
+   }
+
+   void operator()(const F64& value) const
+   {
+      stmt->bind(parameter, value);
+   }
+
+   void operator()(Id value) const
+   {
+      S data;
+      const char* begin = reinterpret_cast<const char*>(&value);
+      const char* end = begin + sizeof(Id);
+
+      data.reserve(sizeof(Id) + 1);
+      data.append((size_t)1, (char)0x2);
+      data.append(begin, end);
+
+      stmt->bindBlob(parameter, data);
+   }
+
+   void operator()(const AssetId& value) const
+   {
+      S data;
+      const char* begin = reinterpret_cast<const char*>(&value);
+      const char* end = begin + sizeof(AssetId);
+
+      data.reserve(sizeof(AssetId) + 1);
+      data.append((size_t)1, (char)0x3);
+      data.append(begin, end);
+
+      stmt->bindBlob(parameter, data);
+   }
+
+   void operator()(const S& value) const
+   {
+      stmt->bind(parameter, value);
+   }
+
+   void operator()(const std::vector<U8>& value) const
+   {
+      S data;
+      data.reserve(value.size() + 1);
+      data.append((size_t)1, (char)0x4);
+      data.append(value.begin(), value.end());
+
+      stmt->bindBlob(parameter, data);
+   }
+
+   bed::Stmt* stmt;
+   int parameter;
+};
+]]>;
+
+} // namespace be::bs::detail
+
+type PropertyValue {
+	class "Configuration::Value";
+	include "be/configuration.hpp";
+	fields nullable_blob;
+	
+	assign <[@\t[
+		detail::SaveConfigurationPropertyVisitor visitor;
+		visitor.stmt = stmt.get();
+		visitor.parameter = parameter;
+		boost::apply_visitor(visitor, value);
+	]]>
+	
+	parse <[@\t[
+		switch (stmt->getType(column))
+		{
+		   case SQLITE_INTEGER:
+		      value = (I64)stmt->getInt64(column);
+		      break;
+		
+		   case SQLITE_FLOAT:
+		      value = (F64)stmt->getDouble(column);
+		      break;
+		
+		   case SQLITE_TEXT:
+		      value = S(stmt->getText(column));
+		      break;
+		
+		   case SQLITE_BLOB:
+		   {
+		      Buf<const UC> blob = stmt->getBlob(column);
+		
+		      if (blob.size() == 0)
+		         value = std::vector<U8>();
+		      else switch (blob[0])
+		      {
+		         case 0: // false
+		            value = false;
+		            break;
+		
+		         case 1: // true
+		            value = true;
+		            break;
+		
+		         case 2: // id
+		            if (blob.size() < 1 + sizeof(Id))
+		               value = Id();
+		            else
+		            {
+		               Id id_value;
+		               memcpy(&id_value, &blob[1], sizeof(Id));
+		               value = id_value;
+		            }
+		            break;
+		
+		         case 3: // assetid
+		            if (blob.size() < 1 + sizeof(AssetId))
+		               value = AssetId();
+		            else
+		            {
+		               AssetId aid;
+		               memcpy(&aid, &blob[1], sizeof(AssetId));
+		               value = aid;
+		            }
+		            break;
+		
+		         case 4:  // blob
+		            value = std::vector<U8>(&blob[1], &blob[blob.size()]);
+		            break;
+		
+		         default: // unknown; treat as raw blob
+		            value = std::vector<U8>(blob.get(), &blob[blob.size()]);
+		            break;
+		      }
+		      break;
+		   }
+		
+		   default:
+		      return false; // don't include NULL-valued properties
+		}
+	]]>
+	
+}
+
+
+
+table configuration {
+	fields {
+		Id id;
+		AssetId parent { bed; id; };
+		S name;
+		U16 history_index;
+		U16 first_history;
+		U16 last_history;
+		U16 max_history;
+	};
+   
+//	primary id;
+
+	table property {
+		fields {
+			Id configuration_id;
+			U16 history_index;
+			Id property;
+			PropertyValue value;
+		};
+/*
+		primary * except value;
+
+		fieldset data {
+			property;
+			value;
+		};
+
+		select query load {
+			fields data;
+			where all {
+				configuration_id;
+				history_index;
+			};
+		};
+
+		replace query save {
+			fields {
+				configuration_id;
+				history_index;
+				data;
+			};
+		};
+
+		replace query save {	// second definition is allowed as long as generated query is identical
+			fields *;
+		};
+
+		delete query erase {
+			where configuration_id;
+		};
+
+		delete query erase_outside {
+			where all {
+				configuration_id;
+				history_index NOT BETWEEN ? AND ?;
+			};
+		};
+
+		update query adjust_history {
+			fields {
+				history_index = history_index + ?;
+			};
+			where configuration_id;
+		};
+*/
+	};
+/*
+	fieldset data {
+      * except id; // light fieldset to prevent generating C++ struct
+      transient bool has_name;
+   }
+   
+   select query load {
+      fields data;
+      where id;
+      limit 1;
+   };
+   
+   replace query save {
+      fields {
+         id;
+         data;
+      };
+   };
+   
+   replace query save {
+      fields *;
+   };
+
+   delete query erase {
+      where id;
+   };
+*/
+
+};
+
+};

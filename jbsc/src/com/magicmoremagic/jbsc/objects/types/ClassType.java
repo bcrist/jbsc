@@ -4,9 +4,7 @@ import java.io.PrintWriter;
 import java.util.*;
 
 import com.magicmoremagic.jbsc.objects.*;
-import com.magicmoremagic.jbsc.objects.base.Entity;
 import com.magicmoremagic.jbsc.objects.base.EntityContainer;
-import com.magicmoremagic.jbsc.objects.containers.Spec;
 import com.magicmoremagic.jbsc.util.CodeGenHelper;
 import com.magicmoremagic.jbsc.visitors.base.IEntityVisitor;
 
@@ -207,16 +205,6 @@ public class ClassType extends FieldType {
 		}
 		
 		@Override
-		public Spec getSpec() {
-			return spec;
-		}
-		
-		@Override
-		public Entity setSpec(Spec spec) {
-			throw new UnsupportedOperationException();
-		}
-		
-		@Override
 		public String getDefaultCode() {
 			StringBuilder sb = new StringBuilder();
 			sb.append("bool fail = false;\n");
@@ -348,7 +336,6 @@ public class ClassType extends FieldType {
 		@Override
 		public Function printDeclaration(PrintWriter writer) {
 			printSignature(writer);
-			writer.println();
 			writer.println(";");
 			return this;
 		}

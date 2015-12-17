@@ -4,6 +4,7 @@ import java.io.PrintWriter;
 import java.util.*;
 
 import com.magicmoremagic.jbsc.OutputFileType;
+import com.magicmoremagic.jbsc.objects.Code;
 import com.magicmoremagic.jbsc.objects.base.Entity;
 import com.magicmoremagic.jbsc.objects.containers.Namespace;
 import com.magicmoremagic.jbsc.objects.containers.Spec;
@@ -70,4 +71,13 @@ public abstract class AbstractPrintVisitor extends AbstractEntityVisitor {
 		return CONTINUE;
 	}
 
+	@Override
+	public int visit(Code code) {
+		if (code.getType() == getOutputType()) {
+			CodeGenHelper.printCode(code.getCode(), writer);
+			writer.println();
+		}
+		return CONTINUE;
+	}
+	
 }

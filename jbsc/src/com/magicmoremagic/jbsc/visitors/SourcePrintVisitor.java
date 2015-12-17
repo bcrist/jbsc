@@ -40,6 +40,11 @@ public class SourcePrintVisitor extends AbstractPrintVisitor {
 		spec.visit(visitor);
 		
 		List<String> includes = new ArrayList<String>(visitor.getSelections());
+		
+		if (OutputFileType.SQL_HEADER.shouldPrintCode(spec)) {
+			includes.add("\"" + spec.getOutputFileName(OutputFileType.SQL_HEADER) + "\"");
+		}
+		
 		if (!includes.isEmpty()) {
 			Collections.sort(includes);
 			

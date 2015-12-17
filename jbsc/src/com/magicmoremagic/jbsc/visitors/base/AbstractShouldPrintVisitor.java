@@ -2,6 +2,7 @@ package com.magicmoremagic.jbsc.visitors.base;
 
 import java.util.Set;
 
+import com.magicmoremagic.jbsc.objects.Code;
 import com.magicmoremagic.jbsc.objects.Function;
 import com.magicmoremagic.jbsc.objects.base.Entity;
 import com.magicmoremagic.jbsc.objects.base.EntityContainer;
@@ -29,7 +30,7 @@ public abstract class AbstractShouldPrintVisitor implements IEntityVisitor {
 	public int init(Entity entity) {
 		return CONTINUE;
 	}
-	
+
 	@Override
 	public int visit(Entity entity) {
 		if (shouldPrint)
@@ -123,6 +124,16 @@ public abstract class AbstractShouldPrintVisitor implements IEntityVisitor {
 
 	@Override
 	public int leave(Function function) {
+		return getResult();
+	}
+
+	@Override
+	public int visit(Code code) {
+		return getResult();
+	}
+
+	@Override
+	public int leave(Code code) {
 		return getResult();
 	}
 

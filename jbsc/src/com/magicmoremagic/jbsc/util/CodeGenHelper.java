@@ -1,15 +1,22 @@
 package com.magicmoremagic.jbsc.util;
 
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.Random;
 
 public class CodeGenHelper {
 
+	private static final Random rnd = new Random();
+	private static final char[] randomChars = initRandomChars();
+	
+	private static char[] initRandomChars() {
+		char[] val = new char[52];
+		for (int i = 0; i < 26; ++i) {
+			val[i] = (char)('A' + i);
+			val[26 + i] = (char)('a' + i);
+		}
+		return val;
+	}
+	
 	
 	public static String concat(String... strings) {
 		StringBuilder sb = new StringBuilder();
@@ -97,30 +104,12 @@ public class CodeGenHelper {
 		}
 	}
 	
-	
-	private static final Pattern SYSTEM_INCLUDE_PATTERN = Pattern.compile("<([^<>\"]+)>");
-	private static final Pattern LOCAL_INCLUDE_PATTERN = Pattern.compile("\"([^<>\"]+)\"");
-	public static void printIncludes(Collection<String> includes, PrintWriter writer) {
-		List<String> sortedIncludes = new ArrayList<String>(includes);
-		Collections.sort(sortedIncludes);
-		
-		for (String include : sortedIncludes) {
-			writer.print("#include ");
-			Matcher matcher = SYSTEM_INCLUDE_PATTERN.matcher(include);
-			if (matcher.matches()) {
-				writer.print(include);
-			} else {
-				matcher = LOCAL_INCLUDE_PATTERN.matcher(include);
-				if (matcher.matches()) {
-					writer.print(include);
-				} else {
-					writer.print('"');
-					writer.print(include.replace("\"", ""));
-					writer.print('"');
-				}
-			}
-			writer.println();
+	public static String getRandomName(int length) {
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < length; ++i) {
+			sb.append(randomChars[rnd.nextInt(randomChars.length)]);
 		}
+		return sb.toString();
 	}
 	
 }

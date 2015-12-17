@@ -165,7 +165,16 @@ public class JBSC {
 							
 							PrintWriter writer;
 							if (USE_STDOUT) {
-								writer = new IndentingPrintWriter(System.out, true);		
+								writer = new IndentingPrintWriter(System.out, true);
+								
+								writer.write("@@@@@ ");
+								String filename = spec.getOutputFileName(type);
+								writer.print(filename);
+								writer.print(' ');
+								for (int i = 72 - filename.length(); i > 0; --i) {
+									writer.print('@');
+								}
+								writer.println();
 							} else {
 								Path directory = type.shouldUseSourceDirectory()
 										? app.sourceOutputDirectory : app.includeOutputDirectory;

@@ -1,5 +1,6 @@
 package com.magicmoremagic.jbsc.visitors.base;
 
+import com.magicmoremagic.jbsc.objects.Code;
 import com.magicmoremagic.jbsc.objects.Function;
 import com.magicmoremagic.jbsc.objects.base.Entity;
 import com.magicmoremagic.jbsc.objects.base.EntityContainer;
@@ -100,6 +101,16 @@ public abstract class AbstractEntityVisitor implements IEntityVisitor {
 
 	@Override
 	public int leave(Function function) {
+		return CONTINUE;
+	}
+	
+	@Override
+	public int visit(Code code) {
+		return CONTINUE;
+	}
+
+	@Override
+	public int leave(Code code) {
 		return CONTINUE;
 	}
 

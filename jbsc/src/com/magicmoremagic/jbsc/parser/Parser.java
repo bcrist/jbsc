@@ -9,8 +9,7 @@ import com.magicmoremagic.jbsc.*;
 import com.magicmoremagic.jbsc.objects.*;
 import com.magicmoremagic.jbsc.objects.base.Entity;
 import com.magicmoremagic.jbsc.objects.base.EntityContainer;
-import com.magicmoremagic.jbsc.objects.containers.Namespace;
-import com.magicmoremagic.jbsc.objects.containers.Spec;
+import com.magicmoremagic.jbsc.objects.containers.*;
 import com.magicmoremagic.jbsc.objects.types.*;
 import com.magicmoremagic.jbsc.parser.Lexer.Mark;
 
@@ -190,14 +189,67 @@ public class Parser {
 		put("no-skip-parse-assign", both);
 	}};
 	private boolean pScopedDecl(EntityContainer parent) {
-		// scoped-decl := col-type | class-type | flag | ';' ;
-		// TODO table, fieldset, code
+		// scoped-decl := code | col-type | class-type | table | flag | ';' ;
+		// TODO fieldset
 		
+		if (pCode(parent)) return true;
 		if (pColType(parent)) return true;
 		if (pClassType(parent)) return true;
+		if (pTable(parent)) return true;
 		if (pEntityFlag(parent, validScopeFlags)) return true;
 		if (optionalEnd()) return true;
 		
+		return false;
+	}
+	
+	private boolean pCode(EntityContainer parent) {
+		// code := non-inline-code | ['inline' | 'header' | 'sqlid' | 'source'] non-inline-code ;
+		
+		if (pNonInlineCode(parent, OutputFileType.SOURCE)) return true;
+		
+		Mark mark = lexer.mark();
+		String token = optionalID();
+		if (token != null) {
+			OutputFileType type = OutputFileType.SOURCE;
+			if (token.equals("inline"))
+				type = OutputFileType.INLINE_SOURCE;
+			else if (token.equals("header"))
+				type = OutputFileType.HEADER;
+			else if (token.equals("sqlid"))
+				type = OutputFileType.SQL_HEADER;
+			else if (token.equals("source"))
+				type = OutputFileType.SOURCE;
+			else {
+				mark.restore();
+				return false;
+			}
+			
+			if (pNonInlineCode(parent, type)) return true;
+			
+			mark.restore();
+			return false;
+		}
+		return false;
+	}
+	
+	private boolean pNonInlineCode(EntityContainer parent, OutputFileType type) {
+		// non-inline-code := 'code' text<code> ';' ;
+		if (optionalID("code")) {
+			Mark mark = lexer.mark();
+			String codeString = expectText();
+			if (codeString != null) {
+				Code code = new Code();
+				code.setType(type);
+				code.setCode(codeString);
+				try {
+					parent.addChild(code);
+				} catch (Exception e) {
+					warning(mark.peek(), parent, "Could not add Code.", e);
+				}
+				expectEnd();
+			}
+			return true;
+		}
 		return false;
 	}
 	
@@ -232,7 +284,6 @@ public class Parser {
 		while (pColTypeDecl(colType));
 		return true;
 	}
-	
 	
 	@SuppressWarnings("serial")
 	private static final Map<String, Set<Flag>> validColTypeFlags = new HashMap<String, Set<Flag>>() {{
@@ -460,6 +511,153 @@ public class Parser {
 		}
 		return false;
 	}
+	
+	private boolean pTable(EntityContainer parent) {
+		// table := 'table' id<name> '{' table-decls '}' [';'] ;
+		if (optionalID("table")) {
+			Mark mark = lexer.mark();
+			String name = expectID();
+			if (name != null) {
+				Table table = new Table(name);
+				try {
+					parent.addChild(table);
+				} catch (Exception e) {
+					warning(mark.peek(), parent, "Could not add Table '" + table.getName() + "'", e);
+				}
+				if (expectOpen() && pTableDecls(table) && expectClose()) {
+					optionalEnd();
+				}
+			}
+			return true;
+		}
+		return false;
+	}
+	
+	private boolean pTableDecls(Table table) {
+		// table-decls := table-decl table-decls | ;
+		while (pTableDecl(table));
+		return true;
+	}
+	
+	@SuppressWarnings("serial")
+	private static final Map<String, Set<Flag>> validTableFlags = new HashMap<String, Set<Flag>>() {{
+//		put("assign-by-value", EnumSet.of(Flag.ASSIGN_BY_VALUE));
+//		put("no-skip-parse", EnumSet.of(Flag.NO_SKIP_PARSE));
+//		put("no-skip-assign", EnumSet.of(Flag.NO_SKIP_ASSIGN));
+//		EnumSet<Flag> both = EnumSet.of(Flag.NO_SKIP_PARSE, Flag.NO_SKIP_ASSIGN);
+//		put("no-skip-assign-parse", both);
+//		put("no-skip-parse-assign", both);
+	}};
+	private boolean pTableDecl(Table table) {
+		// table-decl := table-fields | index | fieldset | query | table | flag | ';' ;
+		
+		if (pTableFields(table)) return true;
+//		if (pTableIndex(table)) return true;	// TODO
+//		if (pFieldSet(table)) return true;		// TODO
+//		if (pQuery(table)) return true;			// TODO
+		if (pTable(table)) return true;
+		if (pEntityFlag(table, validTableFlags)) return true;
+		if (optionalEnd()) return true;
+		
+		return false;
+	}
+	
+	private boolean pTableFields(Table table) {
+		// table-fields := 'fields' ( table-fields-list | table-field-decl ) ;
+		if (optionalID("fields")) {
+			if (pTableFieldsList(table)) return true;
+			if (!pTableFieldDecl(table)) {
+				parseError(lexer.peek(), table, "Expected table-decl!");
+			}
+			return true;
+		}
+		return false;
+	}
+	
+	private boolean pTableFieldsList(Table table) {
+		// table-fields-list := '{' table-field-decls '}' [';'] ;
+		if (optionalOpen()) {
+			if (pTableFieldDecls(table) && expectClose() && optionalEnd()) return true;
+			return true;
+		}
+		return false;
+	}
+	
+	private boolean pTableFieldDecls(Table table) {
+		// table-field-decls := table-field-decl table-field-decls | ;
+		while (pTableFieldDecl(table));
+		return true;
+	}
+	
+	private boolean pTableFieldDecl(Table table) {
+		// table-field-decl := ['transient'] table-simple-field-decl ;
+		if (optionalID("transient")) {
+			if (!pTableSimpleFieldDecl(table, true)) {
+				parseError(lexer.peek(), table, "Expected table-decl!");
+			}
+			return true;
+		}
+		if (pTableSimpleFieldDecl(table, false)) return true;
+		
+		return false;
+	}
+	
+	private boolean pTableSimpleFieldDecl(Table table, boolean transientField) {
+		// table-simple-field-decl := id<type> [id<name>] ';' ;
+		Mark mark = lexer.mark();
+		String typeName = optionalID();
+		if (typeName != null) {
+			String fieldName = optionalID();
+			if (fieldName == null) fieldName = "";
+			if (expectEnd()) {
+				EntityContainer parent = table.getParent();
+				if (parent != null) {
+					Entity type = parent.lookupName(typeName);
+					if (type instanceof FieldType) {
+						FieldType fieldType = (FieldType)type;
+						try {
+							FieldRef ref = new FieldRef(fieldType, fieldName, -1);
+							ref.setTransient(transientField);
+							table.addField(ref);
+						} catch (Exception e) {
+							warning(mark.peek(), table, "Could not add FieldRef!", e);
+						}
+						return true;
+					}
+				}
+				
+				warning(mark.peek(), table, typeName + " does not define a FieldType!");
+			}
+			return true;
+		}
+		
+		return false;
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	
 	private boolean pEntityFlag(Entity entity, Map<String, Set<Flag>> validFlags) {
 		// entity-flag := 'flag' ( entity-flag-list | entity-flag-decl ) ;

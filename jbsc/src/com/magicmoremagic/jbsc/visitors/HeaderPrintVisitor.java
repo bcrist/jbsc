@@ -34,7 +34,7 @@ public class HeaderPrintVisitor extends AbstractHeaderPrintVisitor {
 		AbstractSelectionVisitor<String> visitor = new GetRequiredIncludesVisitor(entitiesToPrint);
 		spec.visit(visitor);
 		
-		List<String> includes = new ArrayList<String>(visitor.getSelections());
+		List<String> includes = new ArrayList<String>(visitor.getSelections());		
 		if (!includes.isEmpty()) {
 			Collections.sort(includes);
 			

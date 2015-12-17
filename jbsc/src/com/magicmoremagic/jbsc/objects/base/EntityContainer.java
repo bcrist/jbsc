@@ -27,12 +27,31 @@ public abstract class EntityContainer extends Entity {
 			if (entity instanceof EntityContainer) {
 				String rest = name.substring(index + CodeGenConfig.QUALIFIED_NAME_SEPARATOR.length());
 				return ((EntityContainer)entity).lookupName(rest);
+			} else if (getSpec() != null) {
+				StringBuilder sb = new StringBuilder(getQualifiedName());
+				sb.append(CodeGenConfig.QUALIFIED_NAME_SEPARATOR);
+				sb.append(name);
+				
+				entity = getSpec().lookupIncludedName(sb.toString());
+				if (entity != null) {
+					return entity;
+				}
 			}
+			
 		} else {
 			// look for entire name in this container.
 			Entity entity = children.get(name);
 			if (entity != null) {
 				return entity;
+			} else if (getSpec() != null) {
+				StringBuilder sb = new StringBuilder(getQualifiedName());
+				sb.append(CodeGenConfig.QUALIFIED_NAME_SEPARATOR);
+				sb.append(name);
+				
+				entity = getSpec().lookupIncludedName(sb.toString());
+				if (entity != null) {
+					return entity;
+				}
 			}
 		}
 		
@@ -66,6 +85,9 @@ public abstract class EntityContainer extends Entity {
 	}
 	
 	public EntityContainer addChild(Entity child) {
+		if (child.getName() == null)
+			throw new NullPointerException();
+		
 		Entity myChild = children.get(child.getName());
 		if (myChild != null) {
 			if (myChild == child)

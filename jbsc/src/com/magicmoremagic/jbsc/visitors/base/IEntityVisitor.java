@@ -1,5 +1,6 @@
 package com.magicmoremagic.jbsc.visitors.base;
 
+import com.magicmoremagic.jbsc.objects.Code;
 import com.magicmoremagic.jbsc.objects.Function;
 import com.magicmoremagic.jbsc.objects.base.Entity;
 import com.magicmoremagic.jbsc.objects.base.EntityContainer;
@@ -43,5 +44,8 @@ public interface IEntityVisitor {
 	
 	int visit(Function function);
 	int leave(Function function);
+	
+	int visit(Code code);
+	int leave(Code code);
 
 }
