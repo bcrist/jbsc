@@ -93,7 +93,7 @@ type PropertyValue {
 		visitor.stmt = stmt.get();
 		visitor.parameter = parameter;
 		boost::apply_visitor(visitor, value);
-	]]>
+	]]>;
 	
 	parse <[@\t[
 		switch (stmt->getType(column))
@@ -162,16 +162,55 @@ type PropertyValue {
 		   default:
 		      return false; // don't include NULL-valued properties
 		}
-	]]>
+	]]>;
 	
 }
+
+
+
+table test {
+	fields {
+		I32 id;
+		I32 a;
+		I32 b;
+	}
+	
+	fieldset value {
+		* except id;
+	}
+
+	select query customQuery {
+		fields {
+			I32 count "COUNT(*)";
+			I32 maxa "MAX(a)";
+			I32 maxb "MAX(b);
+		}
+		where id;
+	}
+
+	select query load {
+		fields value;
+		where id;
+		limit 1;
+	}
+}
+
+
+
+
+
+
+
+
+
+
 
 
 
 table configuration {
 	fields {
 		Id id;
-		AssetId parent { bed; id; };
+		AssetId parent;
 		S name;
 		U16 history_index;
 		U16 first_history;
@@ -181,13 +220,38 @@ table configuration {
    
 //	primary id;
 
+/*
+	fieldset data {
+		* except id; // light fieldset to prevent generating C++ struct
+		transient bool has_name;
+	}
+	
+	select query load {
+		fields data;
+		where id;
+		limit 1;
+	}
+	
+	replace query save {
+		fields {
+			id;
+			data;
+		}
+		fields *;
+	}
+	
+	delete query erase {
+		where id;
+	}
+*/
 	table property {
 		fields {
 			Id configuration_id;
 			U16 history_index;
 			Id property;
 			PropertyValue value;
-		};
+		}
+	}
 /*
 		primary * except value;
 
@@ -230,39 +294,13 @@ table configuration {
 		update query adjust_history {
 			fields {
 				history_index = history_index + ?;
-			};
+			}
 			where configuration_id;
-		};
-*/
-	};
-/*
-	fieldset data {
-      * except id; // light fieldset to prevent generating C++ struct
-      transient bool has_name;
-   }
-   
-   select query load {
-      fields data;
-      where id;
-      limit 1;
-   };
-   
-   replace query save {
-      fields {
-         id;
-         data;
-      };
-   };
-   
-   replace query save {
-      fields *;
-   };
-
-   delete query erase {
-      where id;
-   };
+		}
+	}
 */
 
-};
+}
 
-};
+} // namespace be::bs
+} // namespace be

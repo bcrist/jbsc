@@ -6,7 +6,8 @@ public class FieldRef {
 	private String name;
 	private int firstColumn;
 	private FieldType type;
-	private boolean isTransient;
+	private boolean isTransient;	// exists only in code, allows multiple C++ objects to refer to the same field
+	private boolean isMeta;			// exists only in schema, allows using classTypes for metadata of other fields
 	
 	public FieldRef(FieldType type, String name, int firstColumn) {
 		this.name = name;
@@ -48,6 +49,15 @@ public class FieldRef {
 	
 	public FieldRef setTransient(boolean isTransient) {
 		this.isTransient = isTransient;
+		return this;
+	}
+	
+	public boolean isMeta() {
+		return isMeta;
+	}
+	
+	public FieldRef setMeta(boolean isMeta) {
+		this.isMeta = isMeta;
 		return this;
 	}
 	

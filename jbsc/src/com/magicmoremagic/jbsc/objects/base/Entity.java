@@ -116,6 +116,16 @@ public abstract class Entity {
 			name = newName;
 		}
 	}
+	
+	protected String getCodeNameFromMyNamespace(String qualifiedName, String backup) {
+		String codeName;
+		try {
+			codeName = getParent().lookupName(qualifiedName).getQualifiedCodeName(getNamespace());
+		} catch (NullPointerException e) {
+			codeName = backup;
+		}
+		return codeName;
+	}
 
 	public Set<String> getRequiredIncludes() {
 		return unmodRequiredIncludes;

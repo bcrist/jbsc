@@ -3,6 +3,7 @@ package com.magicmoremagic.jbsc.visitors.parentchain;
 import com.magicmoremagic.jbsc.objects.base.Entity;
 import com.magicmoremagic.jbsc.objects.base.EntityContainer;
 import com.magicmoremagic.jbsc.objects.containers.Namespace;
+import com.magicmoremagic.jbsc.objects.types.ClassType;
 import com.magicmoremagic.jbsc.visitors.base.AbstractStringBuilderVisitor;
 
 public class GetNamespaceQualifiedCodeNameVisitor extends AbstractStringBuilderVisitor {
@@ -23,6 +24,14 @@ public class GetNamespaceQualifiedCodeNameVisitor extends AbstractStringBuilderV
 	@Override
 	public int init(Entity entity) {
 		originalEntity = entity;
+		if (entity instanceof ClassType) {
+			ClassType type = (ClassType)entity;
+			if (type.isBuiltin()) {
+				sb.append(entity.getUnqualifiedCodeName());
+				return STOP;
+			}
+		}
+		
 		useGlobalScopeOperator = !(entity instanceof Namespace);
 		commonAncestor = EntityContainer.findCommonAncestor(entity, fromNamespace, Namespace.class);
 		prependDelim = false;

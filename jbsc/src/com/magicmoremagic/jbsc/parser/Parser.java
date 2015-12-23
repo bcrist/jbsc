@@ -9,6 +9,7 @@ import com.magicmoremagic.jbsc.*;
 import com.magicmoremagic.jbsc.objects.*;
 import com.magicmoremagic.jbsc.objects.base.Entity;
 import com.magicmoremagic.jbsc.objects.base.EntityContainer;
+import com.magicmoremagic.jbsc.objects.base.EntityContainer.ExtractNamespaceResult;
 import com.magicmoremagic.jbsc.objects.containers.*;
 import com.magicmoremagic.jbsc.objects.types.*;
 import com.magicmoremagic.jbsc.parser.Lexer.Mark;
@@ -68,7 +69,6 @@ public class Parser {
 		}
 	}
 	
-
 	private boolean pSpecDecl(Spec spec) {
 		// spec-decl := spec-name | spec-include | namespace | scoped-decl ;
 		if (pSpecName(spec)) return true;
@@ -145,7 +145,7 @@ public class Parser {
 	}
 	
 	private boolean pNamespace(EntityContainer parent) {
-		// namespace := 'namespace' id<name> '{' namespace-decls '}' [';'] ;
+		// namespace := 'namespace' id<name> ( ';' | '{' namespace-decls '}' [';'] );
 		if (optionalID("namespace")) {
 			Mark mark = lexer.mark();
 			String name = expectID();
@@ -156,7 +156,7 @@ public class Parser {
 				} catch (Exception e) {
 					warning(mark.peek(), parent, "Could not add Namespace '" + namespace.getName() + "'.", e);
 				}
-				if (expectOpen() && pNamespaceDecls(namespace) && expectClose()) {
+				if (!optionalEnd() && expectOpen() && pNamespaceDecls(namespace) && expectClose()) {
 					optionalEnd();
 				}
 			}
@@ -180,14 +180,14 @@ public class Parser {
 		return false;
 	}
 	
-	@SuppressWarnings("serial")
-	private static final Map<String, Set<Flag>> validScopeFlags = new HashMap<String, Set<Flag>>() {{
+	@SuppressWarnings("serial")	private static final Map<String, Set<Flag>> validScopeFlags = new HashMap<String, Set<Flag>>() {{
 		put("no-skip-parse", EnumSet.of(Flag.NO_SKIP_PARSE));
 		put("no-skip-assign", EnumSet.of(Flag.NO_SKIP_ASSIGN));
 		EnumSet<Flag> both = EnumSet.of(Flag.NO_SKIP_PARSE, Flag.NO_SKIP_ASSIGN);
 		put("no-skip-assign-parse", both);
 		put("no-skip-parse-assign", both);
 	}};
+	
 	private boolean pScopedDecl(EntityContainer parent) {
 		// scoped-decl := code | col-type | class-type | table | flag | ';' ;
 		// TODO fieldset
@@ -237,7 +237,7 @@ public class Parser {
 		if (optionalID("code")) {
 			Mark mark = lexer.mark();
 			String codeString = expectText();
-			if (codeString != null) {
+			if (codeString != null && expectEnd()) {
 				Code code = new Code();
 				code.setType(type);
 				code.setCode(codeString);
@@ -246,7 +246,6 @@ public class Parser {
 				} catch (Exception e) {
 					warning(mark.peek(), parent, "Could not add Code.", e);
 				}
-				expectEnd();
 			}
 			return true;
 		}
@@ -285,21 +284,22 @@ public class Parser {
 		return true;
 	}
 	
-	@SuppressWarnings("serial")
-	private static final Map<String, Set<Flag>> validColTypeFlags = new HashMap<String, Set<Flag>>() {{
+	@SuppressWarnings("serial")	private static final Map<String, Set<Flag>> validColTypeFlags = new HashMap<String, Set<Flag>>() {{
+		put("assign-by-value", EnumSet.of(Flag.ASSIGN_BY_VALUE));
 		put("no-skip-parse", EnumSet.of(Flag.NO_SKIP_PARSE));
 		put("no-skip-assign", EnumSet.of(Flag.NO_SKIP_ASSIGN));
 		EnumSet<Flag> both = EnumSet.of(Flag.NO_SKIP_PARSE, Flag.NO_SKIP_ASSIGN);
 		put("no-skip-assign-parse", both);
 		put("no-skip-parse-assign", both);
 	}};
+	
 	private boolean pColTypeDecl(ColType colType) {
 		// col-type-decl := affinity | constraints | flag | field-type-decl ;
 		
 		if (pAffinity(colType)) return true;
 		if (pConstraints(colType)) return true;
 		if (pEntityFlag(colType, validColTypeFlags)) return true;
-		if (pFieldTypeDecl(colType)) return true;
+		if (pFieldTypeDecl(colType, Phase.PARSE)) return true;
 		
 		return false;
 	}
@@ -309,7 +309,7 @@ public class Parser {
 		if (optionalID("affinity")) {
 			Mark mark = lexer.mark();
 			String affinity = expectText();
-			if (affinity != null) {
+			if (affinity != null && expectEnd()) {
 				String oldAffinity = colType.getAffinity();
 				if (oldAffinity != null && !oldAffinity.equals(affinity)) {
 					warning(mark.peek(), colType, "Affinity was previously specified as '" + oldAffinity + "'; overwritten by '" + affinity + "'.");
@@ -326,8 +326,7 @@ public class Parser {
 		if (optionalID("constraints")) {
 			Mark mark = lexer.mark();
 			String constraints = expectText();
-		
-			if (constraints != null) {
+			if (constraints != null && expectEnd()) {
 				String oldConstraints = colType.getConstraints();
 				if (oldConstraints != null && !oldConstraints.equals(constraints)) {
 					warning(mark.peek(), colType, "Constraints were previously specified as '" + oldConstraints + "'; overwritten by '" + constraints + "'.");
@@ -346,17 +345,36 @@ public class Parser {
 			String name = expectID();
 			if (name != null) {
 				ClassType classType = new ClassType(name);
-				try {
-					parent.addChild(classType);
-				} catch (Exception e) {
-					warning(mark.peek(), parent, "Could not add ClassType '" + classType.getName() + "'", e);
-				}
-				if (expectOpen() && pClassTypeDecls(classType) && expectClose()) {
-					optionalEnd();
-					
+				Mark preParse = lexer.mark();
+				if (expectOpen() && pClassTypeDecls(classType, Phase.PREPARSE) && expectClose()) {
 					// make sure classType has an class name set
 					if (classType.getClassName() == null) {
 						warning(mark.peek(), classType, "No class name set!");
+					} else {
+						EntityContainer classParent = parent;
+						try {
+							if (classType.isBuiltin()) {
+								if (parent.getSpec() != null)
+									classParent = parent.getSpec();
+							} else {
+								ExtractNamespaceResult nsInfo = parent.extractNamespace(classType.getClassName());
+								if (nsInfo.namespace != null) {
+									classParent = nsInfo.namespace;
+									classType.setClassName(nsInfo.name);
+								}
+							}
+						
+							classType.setFunctionNamespace(parent.getNamespace());
+							classParent.addChild(classType);
+						} catch (Exception e) {
+							warning(mark.peek(), parent, "Could not add ClassType '" + classType.getName() + "' to '" + classParent.getQualifiedName() + "'.", e);
+							return true;
+						}
+						
+						preParse.restore();
+						if (optionalOpen() && pClassTypeDecls(classType, Phase.PARSE) && optionalClose()) {
+							optionalEnd();
+						}
 					}
 				}
 			}
@@ -366,38 +384,40 @@ public class Parser {
 		return false;
 	}
 	
-	private boolean pClassTypeDecls(ClassType classType) {
+	private boolean pClassTypeDecls(ClassType classType, Phase phase) {
 		// class-type-decls := class-type-decl class-type-decls | ;
-		while (pClassTypeDecl(classType));
+		while (pClassTypeDecl(classType, phase));
 		return true;
 	}
 		
-	@SuppressWarnings("serial")
-	private static final Map<String, Set<Flag>> validClassTypeFlags = new HashMap<String, Set<Flag>>() {{
+	@SuppressWarnings("serial")	private static final Map<String, Set<Flag>> validClassTypeFlags = new HashMap<String, Set<Flag>>() {{
 		put("assign-by-value", EnumSet.of(Flag.ASSIGN_BY_VALUE));
+		put("builtin", EnumSet.of(Flag.BUILTIN));
 		put("no-skip-parse", EnumSet.of(Flag.NO_SKIP_PARSE));
 		put("no-skip-assign", EnumSet.of(Flag.NO_SKIP_ASSIGN));
 		EnumSet<Flag> both = EnumSet.of(Flag.NO_SKIP_PARSE, Flag.NO_SKIP_ASSIGN);
 		put("no-skip-assign-parse", both);
 		put("no-skip-parse-assign", both);
 	}};
-	private boolean pClassTypeDecl(ClassType classType) {
+	
+	private boolean pClassTypeDecl(ClassType classType, Phase phase) {
 		// class-type-decl := class-name | class-type-fields | flag | field-type-decl ;		
 		
-		if (pClassName(classType)) return true;
-		if (pClassTypeFields(classType)) return true;
+		if (pClassName(classType, phase)) return true;
+		if (pClassTypeFields(classType, phase)) return true;
 		if (pEntityFlag(classType, validClassTypeFlags)) return true;
-		if (pFieldTypeDecl(classType)) return true;
+		if (pFieldTypeDecl(classType, phase)) return true;
 		
 		return false;
 	}
 
-	private boolean pClassName(ClassType classType) {
+	private boolean pClassName(ClassType classType, Phase phase) {
 		// class-name := 'class' text<classname> ';' ;
+		// only parsed on Phase.PREPARSE
 		if (optionalID("class")) {
 			Mark mark = lexer.mark();
 			String className = expectText();
-			if (className != null) {
+			if (className != null && expectEnd() && phase == Phase.PREPARSE) {
 				String oldClassName = classType.getClassName();
 				if (oldClassName != null && !oldClassName.equals(className)) {
 					warning(mark.peek(), classType, "Class name was previously specified as '" + oldClassName + "'; overwritten by '" + className + "'.");
@@ -409,11 +429,11 @@ public class Parser {
 		return false;
 	}
 	
-	private boolean pClassTypeFields(ClassType classType) {
+	private boolean pClassTypeFields(ClassType classType, Phase phase) {
 		// class-type-fields := 'fields' ( class-type-fields-list | class-type-field-decl ) ;
 		if (optionalID("fields")) {
-			if (pClassTypeFieldsList(classType)) return true;
-			if (!pClassTypeFieldDecl(classType)) {
+			if (pClassTypeFieldsList(classType, phase)) return true;
+			if (!pClassTypeFieldDecl(classType, phase)) {
 				parseError(lexer.peek(), classType, "Expected field-decl!");
 			}
 			return true;
@@ -421,42 +441,48 @@ public class Parser {
 		return false;
 	}
 	
-	private boolean pClassTypeFieldsList(ClassType classType) {
+	private boolean pClassTypeFieldsList(ClassType classType, Phase phase) {
 		// class-type-fields-list := '{' class-type-field-decls '}' [';'] ;
 		if (optionalOpen()) {
-			if (pClassTypeFieldDecls(classType) && expectClose() && optionalEnd()) return true;
+			if (pClassTypeFieldDecls(classType, phase) && expectClose() && optionalEnd()) return true;
 			return true;
 		}
 		return false;
 	}
 	
-	private boolean pClassTypeFieldDecls(ClassType classType) {
+	private boolean pClassTypeFieldDecls(ClassType classType, Phase phase) {
 		// class-type-field-decls := class-type-field-decl class-type-field-decls | ;
-		while (pClassTypeFieldDecl(classType));
+		while (pClassTypeFieldDecl(classType, phase));
 		return true;
 	}
 	
-	private boolean pClassTypeFieldDecl(ClassType classType) {
-		// class-type-field-decl := ['transient'] class-type-simple-field-decl ;
+	private boolean pClassTypeFieldDecl(ClassType classType, Phase phase) {
+		// class-type-field-decl := ['transient' | 'meta'] class-type-simple-field-decl ;
 		if (optionalID("transient")) {
-			if (!pClassTypeSimpleFieldDecl(classType, true)) {
+			if (!pClassTypeSimpleFieldDecl(classType, phase, true, false)) {
 				parseError(lexer.peek(), classType, "Expected field-decl!");
 			}
 			return true;
 		}
-		if (pClassTypeSimpleFieldDecl(classType, false)) return true;
+		if (optionalID("meta")) {
+			if (!pClassTypeSimpleFieldDecl(classType, phase, false, true)) {
+				parseError(lexer.peek(), classType, "Expected field-decl!");
+			}
+			return true;
+		}
+		if (pClassTypeSimpleFieldDecl(classType, phase, false, false)) return true;
 		
 		return false;
 	}
 	
-	private boolean pClassTypeSimpleFieldDecl(ClassType classType, boolean transientField) {
+	private boolean pClassTypeSimpleFieldDecl(ClassType classType, Phase phase, boolean transientField, boolean metaField) {
 		// class-type-simple-field-decl := id<type> [id<name>] ';' ;
 		Mark mark = lexer.mark();
 		String typeName = optionalID();
 		if (typeName != null) {
 			String fieldName = optionalID();
 			if (fieldName == null) fieldName = "";
-			if (expectEnd()) {
+			if (expectEnd() && phase == Phase.PARSE) {
 				EntityContainer parent = classType.getParent();
 				if (parent != null) {
 					Entity type = parent.lookupName(typeName);
@@ -465,6 +491,7 @@ public class Parser {
 						try {
 							FieldRef ref = new FieldRef(fieldType, fieldName, -1);
 							ref.setTransient(transientField);
+							ref.setMeta(metaField);
 							classType.addField(ref);
 						} catch (Exception e) {
 							warning(mark.peek(), classType, "Could not add FieldRef!", e);
@@ -481,25 +508,25 @@ public class Parser {
 		return false;
 	}
 	
-	private boolean pFieldTypeDecl(FieldType fieldType) {
+	private boolean pFieldTypeDecl(FieldType fieldType, Phase phase) {
 		// field-type-decl := implementation-include | required-include | parse | assign | ';' ;
 		
-		if (pImplementationInclude(fieldType)) return true;
-		if (pRequiredInclude(fieldType)) return true;
-		if (pFieldTypeFunctionCode(fieldType, FunctionType.PARSE)) return true;
-		if (pFieldTypeFunctionCode(fieldType, FunctionType.ASSIGN)) return true;
+		if (pImplementationInclude(fieldType, phase)) return true;
+		if (pRequiredInclude(fieldType, phase)) return true;
+		if (pFieldTypeFunctionCode(fieldType, phase, FunctionType.PARSE)) return true;
+		if (pFieldTypeFunctionCode(fieldType, phase, FunctionType.ASSIGN)) return true;
 		if (optionalEnd()) return true;
 		
 		return false;
 	}
 	
-	private boolean pFieldTypeFunctionCode(FieldType fieldType, FunctionType function) {
+	private boolean pFieldTypeFunctionCode(FieldType fieldType, Phase phase, FunctionType function) {
 		// field-type-function-code := function-name text ';' ;
 		String id = function.name().toLowerCase();
 		if (optionalID(id)) {
 			Mark mark = lexer.mark();
 			String code = expectText();
-			if (code != null) {
+			if (code != null && expectEnd() && phase == Phase.PARSE) {
 				Function func = fieldType.getFunction(function);
 				String oldCode = func.getCode();
 				if (oldCode != null && !oldCode.equals(code)) {
@@ -590,8 +617,8 @@ public class Parser {
 	}
 	
 	private boolean pTableFieldDecl(Table table) {
-		// table-field-decl := ['transient'] table-simple-field-decl ;
-		if (optionalID("transient")) {
+		// table-field-decl := ['meta'] table-simple-field-decl ;
+		if (optionalID("meta")) {
 			if (!pTableSimpleFieldDecl(table, true)) {
 				parseError(lexer.peek(), table, "Expected table-decl!");
 			}
@@ -602,7 +629,7 @@ public class Parser {
 		return false;
 	}
 	
-	private boolean pTableSimpleFieldDecl(Table table, boolean transientField) {
+	private boolean pTableSimpleFieldDecl(Table table, boolean metaField) {
 		// table-simple-field-decl := id<type> [id<name>] ';' ;
 		Mark mark = lexer.mark();
 		String typeName = optionalID();
@@ -617,7 +644,7 @@ public class Parser {
 						FieldType fieldType = (FieldType)type;
 						try {
 							FieldRef ref = new FieldRef(fieldType, fieldName, -1);
-							ref.setTransient(transientField);
+							ref.setMeta(metaField);
 							table.addField(ref);
 						} catch (Exception e) {
 							warning(mark.peek(), table, "Could not add FieldRef!", e);
@@ -717,13 +744,12 @@ public class Parser {
 		}
 	}
  
-
-	private boolean pImplementationInclude(Entity entity) {
+	private boolean pImplementationInclude(Entity entity, Phase phase) {
 		// implementation-include := 'implementation' 'include' ( implementation-include-list | implementation-include-name ) ;
 		if (optionalID("implementation")) {
 			if (expectID("include")) {
-				if (pImplementationIncludeList(entity)) return true;
-				if (!pImplementationIncludeName(entity)) {
+				if (pImplementationIncludeList(entity, phase)) return true;
+				if (!pImplementationIncludeName(entity, phase)) {
 					parseError(lexer.peek(), "Expected filename!");
 				}
 			}
@@ -732,22 +758,22 @@ public class Parser {
 		return false;
 	}
 	
-	private boolean pImplementationIncludeList(Entity entity) {
+	private boolean pImplementationIncludeList(Entity entity, Phase phase) {
 		// implementation-include-list := '{' implementation-include-names '}' [';'] ;
 		if (optionalOpen()) {
-			if (pImplementationIncludeNames(entity) && expectClose() && optionalEnd()) return true;
+			if (pImplementationIncludeNames(entity, phase) && expectClose() && optionalEnd()) return true;
 			return true;
 		}
 		return false;
 	}
 	
-	private boolean pImplementationIncludeNames(Entity entity) {
+	private boolean pImplementationIncludeNames(Entity entity, Phase phase) {
 		// implementation-include-names := implementation-include-name implementation-include-names | ;
-		while (pImplementationIncludeName(entity));
+		while (pImplementationIncludeName(entity, phase));
 		return true;
 	}
 	
-	private boolean pImplementationIncludeName(Entity entity) {
+	private boolean pImplementationIncludeName(Entity entity, Phase phase) {
 		// implementation-include-name := ( text.astring | text ) ';' ;
 		if (optional(TokenType.TEXT, false)) {
 			Token token = lexer.consume();
@@ -764,20 +790,19 @@ public class Parser {
 				}
 			}
 			
-			if (expectEnd()) {
+			if (expectEnd() && phase == Phase.PARSE) {
 				entity.addImplementationInclude(include);
 			}
 			return true;
 		}
 		return false;
 	}
-	
-	
-	private boolean pRequiredInclude(Entity entity) {
+		
+	private boolean pRequiredInclude(Entity entity, Phase phase) {
 		// required-include := 'include' ( required-include-list | required-include-name ) ;
 		if (optionalID("include")) {
-			if (pRequiredIncludeList(entity)) return true;
-			if (!pRequiredIncludeName(entity)) {
+			if (pRequiredIncludeList(entity, phase)) return true;
+			if (!pRequiredIncludeName(entity, phase)) {
 				parseError(lexer.peek(), "Expected filename!");
 			}
 			return true;
@@ -785,39 +810,38 @@ public class Parser {
 		return false;
 	}
 	
-	private boolean pRequiredIncludeList(Entity entity) {
+	private boolean pRequiredIncludeList(Entity entity, Phase phase) {
 		// required-include-list := '{' required-include-names '}' [';'] ;
 		if (optionalOpen()) {
-			if (pRequiredIncludeNames(entity) && expectClose() && optionalEnd()) return true;
+			if (pRequiredIncludeNames(entity, phase) && expectClose() && optionalEnd()) return true;
 			return true;
 		}
 		return false;
 	}
 	
-	private boolean pRequiredIncludeNames(Entity entity) {
+	private boolean pRequiredIncludeNames(Entity entity, Phase phase) {
 		// required-include-names := required-include-name required-include-names | ;
-		while (pRequiredIncludeName(entity));
+		while (pRequiredIncludeName(entity, phase));
 		return true;
 	}
 	
-	private boolean pRequiredIncludeName(Entity entity) {
+	private boolean pRequiredIncludeName(Entity entity, Phase phase) {
 		// required-include-name := ( text.astring | text ) ';' ;
 		if (optional(TokenType.TEXT, false)) {
 			Token token = lexer.consume();
-			String include = token.getValue();
-			if (token.getSubtype() == TokenSubtype.ASTRING) {
-				include = "<" + include + ">";
-			}
-			
-			if (!include.isEmpty()) {
-				char first = include.charAt(0);
-				char last = include.charAt(include.length() - 1);
-				if (first != '<' && first != '"' || last != '>' && last != '"') {
-					include = "\"" + include + "\"";
+			if (expectEnd() && phase == Phase.PARSE) {
+				String include = token.getValue();
+				if (token.getSubtype() == TokenSubtype.ASTRING) {
+					include = "<" + include + ">";
 				}
-			}
-			
-			if (expectEnd()) {
+				
+				if (!include.isEmpty()) {
+					char first = include.charAt(0);
+					char last = include.charAt(include.length() - 1);
+					if (first != '<' && first != '"' || last != '>' && last != '"') {
+						include = "\"" + include + "\"";
+					}
+				}
 				entity.addRequiredInclude(include);
 			}
 			return true;

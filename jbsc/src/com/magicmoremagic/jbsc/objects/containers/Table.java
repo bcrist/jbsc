@@ -52,6 +52,7 @@ public class Table extends EntityContainer {
 	public Collection<Integer> getColumnIndices() {
 		List<Integer> usedIndices = new ArrayList<Integer>();
 		for (FieldRef ref : fields) {
+			if (ref.isTransient()) continue;
 			for (Integer index : ref.getType().getColumnIndices()) {
 				usedIndices.add(index + ref.getFirstColumn());
 			}

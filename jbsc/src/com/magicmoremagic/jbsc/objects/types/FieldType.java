@@ -2,8 +2,7 @@ package com.magicmoremagic.jbsc.objects.types;
 
 import java.util.Collection;
 
-import com.magicmoremagic.jbsc.objects.Function;
-import com.magicmoremagic.jbsc.objects.FunctionType;
+import com.magicmoremagic.jbsc.objects.*;
 import com.magicmoremagic.jbsc.objects.base.Entity;
 import com.magicmoremagic.jbsc.visitors.base.IEntityVisitor;
 
@@ -14,6 +13,10 @@ public abstract class FieldType extends Entity {
 	public abstract Collection<Integer> getColumnIndices();
 	public abstract String getColumnName(int columnIndex);
 	public abstract ColType getColumnType(int columnIndex);
+	
+	public boolean isAssignByValue() {
+		return hasFlag(Flag.ASSIGN_BY_VALUE, false);
+	}
 	
 	@Override
 	protected int onVisitorVisit(IEntityVisitor visitor) {

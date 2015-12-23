@@ -5,6 +5,7 @@ import java.util.*;
 
 import com.magicmoremagic.jbsc.objects.*;
 import com.magicmoremagic.jbsc.objects.base.EntityContainer;
+import com.magicmoremagic.jbsc.objects.containers.Namespace;
 import com.magicmoremagic.jbsc.util.CodeGenHelper;
 import com.magicmoremagic.jbsc.visitors.base.IEntityVisitor;
 
@@ -13,6 +14,7 @@ public class ClassType extends FieldType {
 	private String className;
 	private List<FieldRef> fields;
 	private Map<FunctionType, ClassTypeFunction> functions;
+	private EntityContainer functionParent;
 	
 	public ClassType() {
 		fields = new ArrayList<>();
@@ -45,6 +47,11 @@ public class ClassType extends FieldType {
 	
 	@Override
 	protected void trySetParent(EntityContainer newParent) {
+		if (functionParent != null) {
+			super.trySetParent(newParent);
+			return;
+		}
+		
 		EntityContainer oldParent = getParent();
 		try {
 			for (Function func : functions.values()) {
@@ -52,8 +59,10 @@ public class ClassType extends FieldType {
 			}
 			super.trySetParent(newParent);
 		} catch (Exception e) {
-			for (Function func : functions.values()) {
-				oldParent.addChild(func);
+			if (oldParent != null) {
+				for (Function func : functions.values()) {
+					oldParent.addChild(func);
+				}
 			}
 			throw e;
 		}
@@ -73,8 +82,8 @@ public class ClassType extends FieldType {
 		return this;
 	}
 	
-	public boolean isAssignByValue() {
-		return hasFlag(Flag.ASSIGN_BY_VALUE, false);
+	public boolean isBuiltin() {
+		return hasFlag(Flag.BUILTIN, false);
 	}
 	
 	public List<FieldRef> getFields() {
@@ -101,6 +110,24 @@ public class ClassType extends FieldType {
 		return this;
 	}
 	
+	public ClassType setFunctionNamespace(Namespace namespace) {
+		EntityContainer oldParent = functionParent == null ? getParent() : functionParent;
+		try {
+			for (Function func : functions.values()) {
+				namespace.addChild(func);
+			}
+			functionParent = namespace;
+		} catch (Exception e) {
+			if (oldParent != null) {
+				for (Function func : functions.values()) {
+					oldParent.addChild(func);
+				}
+			}
+			throw e;
+		}
+		return this;
+	}
+	
 	@Override
 	public Function getFunction(FunctionType type) {
 		return functions.get(type);
@@ -110,6 +137,7 @@ public class ClassType extends FieldType {
 	public Collection<Integer> getColumnIndices() {
 		List<Integer> usedIndices = new ArrayList<Integer>();
 		for (FieldRef ref : fields) {
+			if (ref.isTransient()) continue;
 			for (Integer index : ref.getType().getColumnIndices()) {
 				usedIndices.add(index + ref.getFirstColumn());
 			}
@@ -210,7 +238,7 @@ public class ClassType extends FieldType {
 			sb.append("bool fail = false;\n");
 			
 			for (FieldRef ref : fields) {
-				if (ref.isTransient())
+				if (ref.isTransient() || ref.isMeta())
 					continue;
 				
 				sb.append("if (!");
@@ -244,7 +272,7 @@ public class ClassType extends FieldType {
 			
 			Collection<Function> deps = new HashSet<>();
 			for (FieldRef ref : fields) {
-				if (ref.isTransient())
+				if (ref.isTransient() || ref.isMeta())
 					continue;
 				
 				Function fieldFunc = ref.getType().getFunction(getFunctionType());
@@ -288,31 +316,21 @@ public class ClassType extends FieldType {
 			writer.print("inline bool ");
 			writer.print(getUnqualifiedCodeName());
 			writer.print('(');
-			
-			String qualifiedBedName;
-			try {
-				qualifiedBedName = getParent().lookupName("be.bed.Bed").getQualifiedCodeName(getNamespace());
-			} catch (NullPointerException e) {
-				qualifiedBedName = "::be::bed::Bed";
-			}
-			
-			writer.print(qualifiedBedName);
+			writer.print(getCodeNameFromMyNamespace("be.bed.Bed", "::be::bed::Bed"));
 			writer.print("& bed, ");
-			
-			String qualifiedCachedStmtName;
-			try {
-				qualifiedCachedStmtName = getParent().lookupName("be.bed.CachedStmt").getQualifiedCodeName(getNamespace());
-			} catch (NullPointerException e) {
-				qualifiedCachedStmtName = "::be::bed::CachedStmt";
-			}
-
-			writer.print(qualifiedCachedStmtName);
+			writer.print(getCodeNameFromMyNamespace("be.bed.CachedStmt", "::be::bed::CachedStmt"));
 			writer.print("& stmt, int parameter, ");
 			
 			if (!isAssignByValue()) {
 				writer.print("const ");
 			}
-			writer.print(className);
+			
+			if (isBuiltin()) {
+				writer.print(className);	
+			} else {
+				writer.print(ClassType.this.getQualifiedCodeName(getNamespace()));
+			}
+			
 			if (!isAssignByValue()) {
 				writer.print("&");
 			}
@@ -353,26 +371,15 @@ public class ClassType extends FieldType {
 			writer.print(getUnqualifiedCodeName());
 			writer.print('(');
 			
-			String qualifiedBedName;
-			try {
-				qualifiedBedName = getParent().lookupName("be.bed.Bed").getQualifiedCodeName(getNamespace());
-			} catch (NullPointerException e) {
-				qualifiedBedName = "::be::bed::Bed";
-			}
-			
-			writer.print(qualifiedBedName);
+			writer.print(getCodeNameFromMyNamespace("be.bed.Bed", "::be::bed::Bed"));
 			writer.print("& bed, ");
-			
-			String qualifiedCachedStmtName;
-			try {
-				qualifiedCachedStmtName = getParent().lookupName("be.bed.CachedStmt").getQualifiedCodeName(getNamespace());
-			} catch (NullPointerException e) {
-				qualifiedCachedStmtName = "::be::bed::CachedStmt";
-			}
-
-			writer.print(qualifiedCachedStmtName);
+			writer.print(getCodeNameFromMyNamespace("be.bed.CachedStmt", "::be::bed::CachedStmt"));
 			writer.print("& stmt, int column, ");
-			writer.print(className);
+			if (isBuiltin()) {
+				writer.print(className);	
+			} else {
+				writer.print(ClassType.this.getQualifiedCodeName(getNamespace()));
+			}
 			writer.print("& value)");
 		}
 		

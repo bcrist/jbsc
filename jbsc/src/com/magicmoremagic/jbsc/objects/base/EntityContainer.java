@@ -4,6 +4,7 @@ import static com.magicmoremagic.jbsc.visitors.base.IEntityVisitor.*;
 
 import java.util.*;
 
+import com.magicmoremagic.jbsc.objects.containers.Namespace;
 import com.magicmoremagic.jbsc.util.CodeGenConfig;
 import com.magicmoremagic.jbsc.visitors.base.IEntityVisitor;
 
@@ -18,6 +19,10 @@ public abstract class EntityContainer extends Entity {
 	}
 	
 	public Entity lookupName(String name) {
+		return lookupName(name, true);
+	}
+	
+	public Entity lookupName(String name, boolean searchParentNamespaces) {
 		int index = name.indexOf(CodeGenConfig.QUALIFIED_NAME_SEPARATOR);
 		if (index != -1) {
 			// do recursive search in this container.
@@ -26,7 +31,7 @@ public abstract class EntityContainer extends Entity {
 			Entity entity = children.get(rootName);
 			if (entity instanceof EntityContainer) {
 				String rest = name.substring(index + CodeGenConfig.QUALIFIED_NAME_SEPARATOR.length());
-				return ((EntityContainer)entity).lookupName(rest);
+				return ((EntityContainer)entity).lookupName(rest, false);
 			} else if (getSpec() != null) {
 				StringBuilder sb = new StringBuilder(getQualifiedName());
 				sb.append(CodeGenConfig.QUALIFIED_NAME_SEPARATOR);
@@ -55,14 +60,58 @@ public abstract class EntityContainer extends Entity {
 			}
 		}
 		
-		// no matches, look in parent
-		EntityContainer parent = getParent();
-		if (parent != null) {
-			return parent.lookupName(name);
+		if (searchParentNamespaces) {
+			// no matches, look in parent
+			EntityContainer parent = getParent();
+			if (parent != null) {
+				return parent.lookupName(name);
+			}
 		}
 		
 		// no matches
 		return null;
+	}
+	
+	public static class ExtractNamespaceResult {
+		public Namespace namespace;
+		public String name;
+	}
+	
+	public ExtractNamespaceResult extractNamespace(String codeName) {
+		ExtractNamespaceResult result = new ExtractNamespaceResult();
+		result.name = codeName;
+		
+		int index = result.name.indexOf("::");
+		if (index == 0) {
+			result.name = result.name.substring(2); // remove leading "::"
+			if (getSpec() != null)
+				getSpec().finishExtractingNamespace(result);
+			
+		} else if (index != -1) {
+			String rootName = result.name.substring(0, index);
+			Entity entity = lookupName(rootName);
+			if (entity instanceof Namespace && entity.getSpec() == getSpec()) {
+				result.namespace = (Namespace)entity;
+				result.name = result.name.substring(index + 2);
+				result.namespace.finishExtractingNamespace(result);
+			}
+		}
+		
+		return result;
+	}
+	
+	protected void finishExtractingNamespace(ExtractNamespaceResult result) {
+		int index = result.name.indexOf("::");
+		if (index != -1) {
+			String rootName = result.name.substring(0, index);
+			
+			Entity entity = children.get(rootName);
+			if (entity instanceof Namespace) {
+				result.namespace = (Namespace)entity;
+				result.name = result.name.substring(index + 2);
+				result.namespace.finishExtractingNamespace(result);
+			}
+		}
 	}
 	
 	public Collection<Entity> getChildren() {

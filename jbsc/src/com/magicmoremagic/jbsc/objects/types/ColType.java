@@ -183,25 +183,21 @@ public class ColType extends FieldType {
 			writer.print(getUnqualifiedCodeName());
 			writer.print('(');
 			
-			String qualifiedBedName;
-			try {
-				qualifiedBedName = getParent().lookupName("be.bed.Bed").getQualifiedCodeName(getNamespace());
-			} catch (NullPointerException e) {
-				qualifiedBedName = "::be::bed::Bed";
-			}
-			
-			writer.print(qualifiedBedName);
+			writer.print(getCodeNameFromMyNamespace("be.bed.Bed", "::be::bed::Bed"));
 			writer.print("& bed, ");
+			writer.print(getCodeNameFromMyNamespace("be.bed.CachedStmt", "::be::bed::CachedStmt"));			
+			writer.print("& stmt, int parameter, ");
 			
-			String qualifiedCachedStmtName;
-			try {
-				qualifiedCachedStmtName = getParent().lookupName("be.bed.CachedStmt").getQualifiedCodeName(getNamespace());
-			} catch (NullPointerException e) {
-				qualifiedCachedStmtName = "::be::bed::CachedStmt";
+			if (!isAssignByValue()) {
+				writer.print("const ");
 			}
-
-			writer.print(qualifiedCachedStmtName);
-			writer.print("& stmt, int parameter, const T& value)");
+			
+			writer.print("T");	
+			
+			if (!isAssignByValue()) {
+				writer.print("&");
+			}
+			writer.print(" value)");
 		}
 		
 	}
@@ -252,26 +248,10 @@ public class ColType extends FieldType {
 			writer.print("bool ");
 			writer.print(getUnqualifiedCodeName());
 			writer.print('(');
-			
-			String qualifiedBedName;
-			try {
-				qualifiedBedName = getParent().lookupName("be.bed.Bed").getQualifiedCodeName(getNamespace());
-			} catch (NullPointerException e) {
-				qualifiedBedName = "::be::bed::Bed";
-			}
-			
-			writer.print(qualifiedBedName);
+			writer.print(getCodeNameFromMyNamespace("be.bed.Bed", "::be::bed::Bed"));
 			writer.print("& bed, ");
-			
-			String qualifiedCachedStmtName;
-			try {
-				qualifiedCachedStmtName = getParent().lookupName("be.bed.CachedStmt").getQualifiedCodeName(getNamespace());
-			} catch (NullPointerException e) {
-				qualifiedCachedStmtName = "::be::bed::CachedStmt";
-			}
-
-			writer.print(qualifiedCachedStmtName);
-			writer.print("& stmt, int column, const T& value)");
+			writer.print(getCodeNameFromMyNamespace("be.bed.CachedStmt", "::be::bed::CachedStmt"));
+			writer.print("& stmt, int column, T& value)");
 		}
 		
 	}

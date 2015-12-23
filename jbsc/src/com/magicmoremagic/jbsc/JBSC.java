@@ -104,8 +104,9 @@ public class JBSC {
 		return specPath;
 	}
 	
-	private PrintWriter getFilePrintWriter(Path directory, String filename) throws FileNotFoundException {
+	private PrintWriter getFilePrintWriter(Path directory, String filename) throws IOException {
 		Path path = directory.resolve(filename);
+		Files.createDirectories(path.getParent());
 		try {
 			return new IndentingPrintWriter(path.toFile(), "UTF8");
 		} catch (UnsupportedEncodingException e) {
