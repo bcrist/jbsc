@@ -1,28 +1,47 @@
 package com.magicmoremagic.jbsc.objects.types;
 
-import java.util.Collection;
-
-import com.magicmoremagic.jbsc.objects.*;
-import com.magicmoremagic.jbsc.objects.base.Entity;
+import com.magicmoremagic.jbsc.OutputFileType;
+import com.magicmoremagic.jbsc.objects.Flag;
+import com.magicmoremagic.jbsc.objects.base.AbstractEntity;
+import com.magicmoremagic.jbsc.objects.base.EntityFlags;
+import com.magicmoremagic.jbsc.objects.base.EntityFunctions;
+import com.magicmoremagic.jbsc.objects.base.EntityIncludes;
+import com.magicmoremagic.jbsc.objects.queries.FieldList;
 import com.magicmoremagic.jbsc.visitors.base.IEntityVisitor;
 
-public abstract class FieldType extends Entity {
+public abstract class FieldType extends AbstractEntity {
 
-	public abstract Function getFunction(FunctionType type);
+	private EntityIncludes headerIncludes = new EntityIncludes();
+	private EntityIncludes sourceIncludes = new EntityIncludes();
 	
-	public abstract Collection<Integer> getColumnIndices();
-	public abstract String getColumnName(int columnIndex);
-	public abstract ColType getColumnType(int columnIndex);
+	public FieldType() {
+		super(new EntityFlags());
+	}
+	
+	public abstract FieldList fields();	
+	public abstract EntityFunctions functions();
 	
 	public boolean isAssignByValue() {
 		return hasFlag(Flag.ASSIGN_BY_VALUE, false);
 	}
 	
 	@Override
+	public EntityIncludes requiredIncludes(OutputFileType type) {
+		switch (type) {
+		case HEADER:
+			return headerIncludes;
+		case SOURCE:
+			return sourceIncludes;
+		default:
+			return super.requiredIncludes(type);
+		}
+	}
+	
+	@Override
 	protected int onVisitorVisit(IEntityVisitor visitor) {
 		int result = super.onVisitorVisit(visitor);
 		if ((result & (IEntityVisitor.CANCEL_THIS | IEntityVisitor.STOP)) == 0) {
-			result |= visitor.visit(this);
+			result |= visitor.visitFieldType(this);
 		}
 		return result;
 	}
@@ -31,9 +50,10 @@ public abstract class FieldType extends Entity {
 	protected int onVisitorLeave(IEntityVisitor visitor) {
 		int result = super.onVisitorLeave(visitor);
 		if ((result & (IEntityVisitor.CANCEL_THIS | IEntityVisitor.STOP)) == 0) {
-			result |= visitor.leave(this);
+			result |= visitor.leaveFieldType(this);
 		}
 		return result;
 	}
 	
 }
+

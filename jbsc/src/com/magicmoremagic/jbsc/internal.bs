@@ -1,3 +1,5 @@
+spec "__internal__";
+
 namespace be {
 namespace bed {
 

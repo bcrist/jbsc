@@ -1,11 +1,11 @@
 package com.magicmoremagic.jbsc.objects;
 
 import com.magicmoremagic.jbsc.OutputFileType;
-import com.magicmoremagic.jbsc.objects.base.Entity;
+import com.magicmoremagic.jbsc.objects.base.AbstractEntity;
 import com.magicmoremagic.jbsc.util.CodeGenHelper;
 import com.magicmoremagic.jbsc.visitors.base.IEntityVisitor;
 
-public class Code extends Entity {
+public class Code extends AbstractEntity {
 
 	protected OutputFileType type;
 	protected String code;

@@ -1,40 +1,41 @@
 package com.magicmoremagic.jbsc.objects.queries;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 import com.magicmoremagic.jbsc.objects.Function;
-import com.magicmoremagic.jbsc.objects.base.EntityContainer;
+import com.magicmoremagic.jbsc.objects.base.AbstractContainer;
 import com.magicmoremagic.jbsc.visitors.base.IEntityVisitor;
 
-public abstract class Query extends EntityContainer {
+public abstract class Query extends AbstractContainer {
 	
-	private Map<QueryParameters, Function> functions;
-	private Collection<QueryParameters> unmodParameterSets;
+	private Map<FieldList, Function> functions;
+	private Map<FieldList, Function> unmodFunctions;
 	
 	public Query() {
 		functions = new HashMap<>();
-		unmodParameterSets = Collections.unmodifiableCollection(functions.keySet());
+		unmodFunctions = Collections.unmodifiableMap(functions);
 	}
 	
 	
-	public Collection<QueryParameters> getParameterSets() {
-		return unmodParameterSets;
+	public Collection<FieldList> getParameterSets() {
+		return unmodFunctions.keySet();
 	}
 	
-	public Function getFunction(QueryParameters parameterSet) {
+	public Function getFunction(FieldList parameterSet) {
 		return functions.get(parameterSet);
 	}
 	
-	public Query addParameterSet(QueryParameters parameterSet) {
-		functions.put(parameterSet,  getFunctionForNewParameterSet(parameterSet));
+	public Query addParameterSet(FieldList parameterSet) {
+		functions.put(parameterSet, createFunction(parameterSet));
 		return this;
 	}
 	
 	public abstract String getSQL();
 	
-	
-	
-	
+	protected abstract Function createFunction(FieldList parameterSet);
 	
 
 	@Override

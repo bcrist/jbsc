@@ -1,40 +1,53 @@
 package com.magicmoremagic.jbsc.objects.containers;
 
 import java.nio.file.Path;
-import java.util.*;
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 import com.magicmoremagic.jbsc.OutputFileType;
-import com.magicmoremagic.jbsc.objects.base.Entity;
-import com.magicmoremagic.jbsc.objects.base.EntityContainer;
+import com.magicmoremagic.jbsc.objects.base.AbstractContainer;
+import com.magicmoremagic.jbsc.objects.base.AbstractEntity;
+import com.magicmoremagic.jbsc.objects.base.EntityFlags;
+import com.magicmoremagic.jbsc.objects.base.EntityIncludes;
 import com.magicmoremagic.jbsc.visitors.base.IEntityVisitor;
 
-public class Spec extends EntityContainer {
+public class Spec extends AbstractContainer {
 
+	private static final EntityIncludes HEADER_INCLUDES = new EntityIncludes() {{
+		add("\"be/_be.hpp\"");
+	}};
+	
 	private int errorCount;
 	private int warningCount;
 	private Path inputPath;
 	private Set<Spec> includedSpecs;
 	private Set<Spec> unmodIncludedSpecs;
+
+	private EntityIncludes headerIncludes = new EntityIncludes(HEADER_INCLUDES, false);
+	private EntityIncludes sourceIncludes = new EntityIncludes();
 	
 	public Spec() {
+		super(new EntityFlags());
 		includedSpecs = new LinkedHashSet<>();
 		unmodIncludedSpecs = Collections.unmodifiableSet(includedSpecs);
 	}
 	
 	@Override
-	protected void initRequiredIncludes() {
-		super.initRequiredIncludes();
-		requiredIncludes.add("\"be/_be.hpp\"");
-	}
-	
-	@Override
-	public Spec getSpec() {
-		return this;
-	}
-	
-	@Override
-	public String getUnqualifiedCodeName() {
+	public String getCName() {
 		return null;
+	}
+	
+	@Override
+	public EntityIncludes requiredIncludes(OutputFileType type) {
+		switch (type) {
+		case HEADER:
+			return headerIncludes;
+		case SOURCE:
+			return sourceIncludes;
+		default:
+			return super.requiredIncludes(type);
+		}
 	}
 	
 	public int getErrorCount() {
@@ -97,11 +110,11 @@ public class Spec extends EntityContainer {
 		return this;
 	}
 	
-	public Entity lookupIncludedName(String name) {
+	public AbstractEntity lookupIncludedEntity(String qualifiedName) {
 		for (Spec includedSpec : includedSpecs) {
-			Entity entity = includedSpec.lookupName(name);
+			AbstractEntity entity = includedSpec.lookupEntity(qualifiedName, false);
 			if (entity != null)
-				return entity;	
+				return entity;
 		}
 		return null;
 	}

@@ -1,75 +1,49 @@
 package com.magicmoremagic.jbsc.objects.types;
 
 import java.io.PrintWriter;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
 
-import com.magicmoremagic.jbsc.objects.*;
-import com.magicmoremagic.jbsc.objects.base.EntityContainer;
+import com.magicmoremagic.jbsc.OutputFileType;
+import com.magicmoremagic.jbsc.objects.Flag;
+import com.magicmoremagic.jbsc.objects.Function;
+import com.magicmoremagic.jbsc.objects.FunctionType;
+import com.magicmoremagic.jbsc.objects.base.EntityFunctions;
+import com.magicmoremagic.jbsc.objects.base.EntityIncludes;
 import com.magicmoremagic.jbsc.objects.containers.Namespace;
+import com.magicmoremagic.jbsc.objects.queries.FieldList;
 import com.magicmoremagic.jbsc.util.CodeGenHelper;
 import com.magicmoremagic.jbsc.visitors.base.IEntityVisitor;
 
 public class ClassType extends FieldType {
 
 	private String className;
-	private List<FieldRef> fields;
-	private Map<FunctionType, ClassTypeFunction> functions;
-	private EntityContainer functionParent;
-	
-	public ClassType() {
-		fields = new ArrayList<>();
-		
-		functions = new EnumMap<>(FunctionType.class);
-		functions.put(FunctionType.ASSIGN, new AssignFunction());
-		functions.put(FunctionType.PARSE, new ParseFunction());
-	}
-	
+	private FieldList fields;
+	private EntityFunctions functions;
+	private EntityFunctions.Mediator funcMediator;
+
 	public ClassType(String name) {
 		this();
 		setName(name);
 	}
 	
-	@Override
-	protected void trySetName(String newName) {
-		String oldName = getName();
-		try {
-			for (ClassTypeFunction func : functions.values()) {
-				func.setName(func.calculateName(newName));
-			}
-			super.trySetName(newName);
-		} catch (Exception e) {
-			for (ClassTypeFunction func : functions.values()) {
-				func.setName(func.calculateName(oldName));
-			}
-			throw e;
-		}
+	public ClassType() {
+		fields = new FieldList();
+		funcMediator = new EntityFunctions.Mediator();
+		functions = new EntityFunctions(funcMediator);
+		funcMediator.put(FunctionType.ASSIGN, new AssignFunction());
+		funcMediator.put(FunctionType.PARSE, new ParseFunction());
 	}
 	
 	@Override
-	protected void trySetParent(EntityContainer newParent) {
-		if (functionParent != null) {
-			super.trySetParent(newParent);
-			return;
-		}
-		
-		EntityContainer oldParent = getParent();
-		try {
-			for (Function func : functions.values()) {
-				newParent.addChild(func);
-			}
-			super.trySetParent(newParent);
-		} catch (Exception e) {
-			if (oldParent != null) {
-				for (Function func : functions.values()) {
-					oldParent.addChild(func);
-				}
-			}
-			throw e;
-		}
+	protected void onNameChanged(String oldName) {
+		super.onNameChanged(oldName);
+		funcMediator.calculateNames();
 	}
 	
 	@Override
-	public String getUnqualifiedCodeName() {
+	public String getCName() {
 		return className;
 	}
 	
@@ -86,118 +60,27 @@ public class ClassType extends FieldType {
 		return hasFlag(Flag.BUILTIN, false);
 	}
 	
-	public List<FieldRef> getFields() {
+	@Override
+	public FieldList fields() {
 		return fields;
 	}
 	
-	public ClassType setFields(List<FieldRef> fields) {
-		this.fields = fields;
-		return this;
-	}
-	
-	public ClassType addField(FieldRef ref) {
-		// TODO verify unique names
-		if (ref.getFirstColumn() < 0) {
-			ref.setFirstColumn(getNextUnusedColumnIndex());
-		}
-		fields.add(ref);
-		return this;
-	}
-	
-	public ClassType addField(FieldType type, String name) {
-		// TODO verify unique names
-		fields.add(new FieldRef(type, name, getNextUnusedColumnIndex()));
-		return this;
+	@Override
+	public EntityFunctions functions() {
+		return functions;
 	}
 	
 	public ClassType setFunctionNamespace(Namespace namespace) {
-		EntityContainer oldParent = functionParent == null ? getParent() : functionParent;
+		Namespace oldNamespace = functions.getNamespace();
 		try {
-			for (Function func : functions.values()) {
-				namespace.addChild(func);
-			}
-			functionParent = namespace;
+			funcMediator.setNamespace(namespace);
 		} catch (Exception e) {
-			if (oldParent != null) {
-				for (Function func : functions.values()) {
-					oldParent.addChild(func);
-				}
-			}
+			funcMediator.setNamespace(oldNamespace);
 			throw e;
 		}
 		return this;
 	}
-	
-	@Override
-	public Function getFunction(FunctionType type) {
-		return functions.get(type);
-	}
 
-	@Override
-	public Collection<Integer> getColumnIndices() {
-		List<Integer> usedIndices = new ArrayList<Integer>();
-		for (FieldRef ref : fields) {
-			if (ref.isTransient()) continue;
-			for (Integer index : ref.getType().getColumnIndices()) {
-				usedIndices.add(index + ref.getFirstColumn());
-			}
-		}
-		return usedIndices;
-	}
-	
-	@Override
-	public String getColumnName(int columnIndex) {
-		for (FieldRef ref : fields) {
-			if (ref.getFirstColumn() > columnIndex || ref.isTransient())
-				continue;
-			
-			int index = columnIndex - ref.getFirstColumn();
-			String childName = ref.getType().getColumnName(index);
-			if (childName != null) {
-				String parentName = ref.getName();
-				if (parentName == null)
-					parentName = "";
-				
-				StringBuilder sb = new StringBuilder(parentName.length() + childName.length() + 1);
-				sb.append(parentName);
-				
-				if (!parentName.isEmpty() && !childName.isEmpty())
-					sb.append('_');
-				
-				sb.append(childName);
-				
-				return sb.toString();
-			}
-		}
-		
-		return null;
-	}
-	
-	@Override
-	public ColType getColumnType(int columnIndex) {
-		for (FieldRef ref : fields) {
-			if (ref.getFirstColumn() > columnIndex || ref.isTransient())
-				continue;
-			
-			int index = columnIndex - ref.getFirstColumn();
-			ColType type = ref.getType().getColumnType(index);
-			
-			if (type != null)
-				return type;
-		}
-		
-		return null;
-	}
-	
-	private int getNextUnusedColumnIndex() {
-		Collection<Integer> usedIndices = getColumnIndices();
-		for (int i = 0; i < 100; ++i) {
-			if (!usedIndices.contains(i))
-				return i;
-		}
-		throw new IllegalStateException("Too many columns in type " + name);
-	}
-	
 	@Override
 	protected int onVisitorVisit(IEntityVisitor visitor) {
 		int result = super.onVisitorVisit(visitor);
@@ -219,13 +102,14 @@ public class ClassType extends FieldType {
 	private abstract class ClassTypeFunction extends Function {
 		
 		@Override
-		protected void initRequiredIncludes() {
-			super.initRequiredIncludes();
-			requiredIncludes.add("\"be/bed/stmt.hpp\"");
-			requiredIncludes.add("\"be/bed/bed.hpp\"");
+		public EntityIncludes requiredIncludes(OutputFileType type) {
+			switch (type) {
+			case HEADER:
+				return EntityIncludes.BED_STMT_INCLUDES;
+			default:
+				return super.requiredIncludes(type);
+			}
 		}
-		
-		abstract String calculateName(String classTypeName);
 		
 		@Override
 		public boolean isImplementationInline() {
@@ -237,19 +121,19 @@ public class ClassType extends FieldType {
 			StringBuilder sb = new StringBuilder();
 			sb.append("bool fail = false;\n");
 			
-			for (FieldRef ref : fields) {
+			for (FieldRef ref : fields.get()) {
 				if (ref.isTransient() || ref.isMeta())
 					continue;
 				
 				sb.append("if (!");
-				sb.append(ref.getType().getFunction(getFunctionType()).getQualifiedCodeName(getNamespace()));
+				sb.append(ref.getType().functions().get(getFunctionType()).getQualifiedCName(getNamespace()));
 				sb.append("(bed, stmt, ");
 				if (getFunctionType() == FunctionType.PARSE) {
 					sb.append("column + ");
 				} else {
 					sb.append("parameter + ");
 				}
-				sb.append(ref.getFirstColumn());
+				sb.append(ref.getFirstSqlIndex());
 				sb.append(", value");
 				if (ref.getName() != null && !ref.getName().isEmpty()) {
 					sb.append('.');
@@ -265,17 +149,17 @@ public class ClassType extends FieldType {
 		
 		@Override
 		public Collection<Function> getDependencies() {
-			if (getCode() != null || fields.isEmpty()) {
+			if (getCode() != null || fields.get().isEmpty()) {
 				Collection<Function> deps = Collections.emptySet();
 				return deps;
 			}
 			
 			Collection<Function> deps = new HashSet<>();
-			for (FieldRef ref : fields) {
+			for (FieldRef ref : fields.get()) {
 				if (ref.isTransient() || ref.isMeta())
 					continue;
 				
-				Function fieldFunc = ref.getType().getFunction(getFunctionType());
+				Function fieldFunc = ref.getType().functions().get(getFunctionType());
 				deps.add(fieldFunc);
 				deps.addAll(fieldFunc.getDependencies());
 			}
@@ -293,8 +177,8 @@ public class ClassType extends FieldType {
 		}
 		
 		@Override
-		String calculateName(String classTypeName) {
-			return "assignType" + CodeGenHelper.toPascalCase(classTypeName);
+		protected String calculateDefaultName() {
+			return "assignType" + CodeGenHelper.toPascalCase(ClassType.this.getName());
 		}
 
 		@Override
@@ -314,11 +198,11 @@ public class ClassType extends FieldType {
 		
 		private void printSignature(PrintWriter writer) {
 			writer.print("inline bool ");
-			writer.print(getUnqualifiedCodeName());
+			writer.print(getCName());
 			writer.print('(');
-			writer.print(getCodeNameFromMyNamespace("be.bed.Bed", "::be::bed::Bed"));
+			writer.print(lookupCName("be.bed.Bed", "::be::bed::Bed"));
 			writer.print("& bed, ");
-			writer.print(getCodeNameFromMyNamespace("be.bed.CachedStmt", "::be::bed::CachedStmt"));
+			writer.print(lookupCName("be.bed.CachedStmt", "::be::bed::CachedStmt"));
 			writer.print("& stmt, int parameter, ");
 			
 			if (!isAssignByValue()) {
@@ -328,7 +212,7 @@ public class ClassType extends FieldType {
 			if (isBuiltin()) {
 				writer.print(className);	
 			} else {
-				writer.print(ClassType.this.getQualifiedCodeName(getNamespace()));
+				writer.print(ClassType.this.getQualifiedCName(getNamespace()));
 			}
 			
 			if (!isAssignByValue()) {
@@ -347,8 +231,8 @@ public class ClassType extends FieldType {
 		}
 
 		@Override
-		String calculateName(String classTypeName) {
-			return "parseType" + CodeGenHelper.toPascalCase(classTypeName);
+		protected String calculateDefaultName() {
+			return "parseType" + CodeGenHelper.toPascalCase(ClassType.this.getName());
 		}
 
 		@Override
@@ -368,17 +252,17 @@ public class ClassType extends FieldType {
 		
 		private void printSignature(PrintWriter writer) {
 			writer.print("inline bool ");
-			writer.print(getUnqualifiedCodeName());
+			writer.print(getCName());
 			writer.print('(');
 			
-			writer.print(getCodeNameFromMyNamespace("be.bed.Bed", "::be::bed::Bed"));
+			writer.print(lookupCName("be.bed.Bed", "::be::bed::Bed"));
 			writer.print("& bed, ");
-			writer.print(getCodeNameFromMyNamespace("be.bed.CachedStmt", "::be::bed::CachedStmt"));
+			writer.print(lookupCName("be.bed.CachedStmt", "::be::bed::CachedStmt"));
 			writer.print("& stmt, int column, ");
 			if (isBuiltin()) {
 				writer.print(className);	
 			} else {
-				writer.print(ClassType.this.getQualifiedCodeName(getNamespace()));
+				writer.print(ClassType.this.getQualifiedCName(getNamespace()));
 			}
 			writer.print("& value)");
 		}

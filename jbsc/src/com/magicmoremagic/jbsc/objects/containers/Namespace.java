@@ -1,11 +1,14 @@
 package com.magicmoremagic.jbsc.objects.containers;
 
-import com.magicmoremagic.jbsc.objects.base.EntityContainer;
+import com.magicmoremagic.jbsc.objects.base.AbstractContainer;
+import com.magicmoremagic.jbsc.objects.base.EntityFlags;
 import com.magicmoremagic.jbsc.visitors.base.IEntityVisitor;
 
-public class Namespace extends EntityContainer {
-
-	public Namespace() { }
+public class Namespace extends AbstractContainer {
+	
+	public Namespace() {
+		super(new EntityFlags());
+	}
 	
 	public Namespace(String name) {
 		this();

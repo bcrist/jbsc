@@ -1,11 +1,14 @@
 package com.magicmoremagic.jbsc.visitors;
 
 import java.io.PrintWriter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
 
 import com.magicmoremagic.jbsc.OutputFileType;
 import com.magicmoremagic.jbsc.objects.Function;
-import com.magicmoremagic.jbsc.objects.base.Entity;
+import com.magicmoremagic.jbsc.objects.base.AbstractEntity;
 import com.magicmoremagic.jbsc.objects.containers.Spec;
 import com.magicmoremagic.jbsc.util.CodeGenConfig;
 import com.magicmoremagic.jbsc.util.CodeGenHelper;
@@ -14,7 +17,7 @@ import com.magicmoremagic.jbsc.visitors.base.AbstractSelectionVisitor;
 
 public class HeaderPrintVisitor extends AbstractHeaderPrintVisitor {
 	
-	public HeaderPrintVisitor(PrintWriter writer, Set<Entity> entitiesToPrint) {
+	public HeaderPrintVisitor(PrintWriter writer, Set<AbstractEntity> entitiesToPrint) {
 		super(writer, entitiesToPrint);
 	}
 	
@@ -31,7 +34,7 @@ public class HeaderPrintVisitor extends AbstractHeaderPrintVisitor {
 	}
 	
 	protected void printIncludes(Spec spec) {
-		AbstractSelectionVisitor<String> visitor = new GetRequiredIncludesVisitor(entitiesToPrint);
+		AbstractSelectionVisitor<String> visitor = new GetRequiredIncludesVisitor(OutputFileType.HEADER, entitiesToPrint);
 		spec.visit(visitor);
 		
 		List<String> includes = new ArrayList<String>(visitor.getSelections());		

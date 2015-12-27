@@ -3,12 +3,12 @@ package com.magicmoremagic.jbsc.objects;
 import java.io.PrintWriter;
 import java.util.Collection;
 
-import com.magicmoremagic.jbsc.objects.base.Entity;
+import com.magicmoremagic.jbsc.objects.base.AbstractEntity;
 import com.magicmoremagic.jbsc.util.CodeGenHelper;
 import com.magicmoremagic.jbsc.util.IndentingPrintWriter;
 import com.magicmoremagic.jbsc.visitors.base.IEntityVisitor;
 
-public abstract class Function extends Entity {
+public abstract class Function extends AbstractEntity {
 
 	protected String code;
 	

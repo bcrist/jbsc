@@ -1,7 +1,8 @@
 package com.magicmoremagic.jbsc.visitors.parentchain;
 
-import com.magicmoremagic.jbsc.objects.base.Entity;
-import com.magicmoremagic.jbsc.objects.base.EntityContainer;
+import com.magicmoremagic.jbsc.objects.base.AbstractEntity;
+import com.magicmoremagic.jbsc.objects.base.Entities;
+import com.magicmoremagic.jbsc.objects.base.IEntity;
 import com.magicmoremagic.jbsc.objects.containers.Namespace;
 import com.magicmoremagic.jbsc.objects.types.ClassType;
 import com.magicmoremagic.jbsc.visitors.base.AbstractStringBuilderVisitor;
@@ -12,7 +13,7 @@ public class GetNamespaceQualifiedCodeNameVisitor extends AbstractStringBuilderV
 	
 	private Namespace fromNamespace;
 	
-	private Entity originalEntity;
+	private IEntity originalEntity;
 	private Namespace commonAncestor;
 	private boolean useGlobalScopeOperator;
 	private boolean prependDelim;
@@ -22,24 +23,24 @@ public class GetNamespaceQualifiedCodeNameVisitor extends AbstractStringBuilderV
 	}
 	
 	@Override
-	public int init(Entity entity) {
+	public int init(IEntity entity) {
 		originalEntity = entity;
 		if (entity instanceof ClassType) {
 			ClassType type = (ClassType)entity;
 			if (type.isBuiltin()) {
-				sb.append(entity.getUnqualifiedCodeName());
+				sb.append(entity.getCName());
 				return STOP;
 			}
 		}
 		
 		useGlobalScopeOperator = !(entity instanceof Namespace);
-		commonAncestor = EntityContainer.findCommonAncestor(entity, fromNamespace, Namespace.class);
+		commonAncestor = Entities.findCommonAncestor(entity, fromNamespace, Namespace.class);
 		prependDelim = false;
 		return CONTINUE;
 	}
 	
 	@Override
-	public int visit(Entity entity) {
+	public int visitAbstractEntity(AbstractEntity entity) {
 		if (entity == commonAncestor) {
 			return CANCEL_THIS | CANCEL_PARENTS;
 		}
@@ -52,14 +53,14 @@ public class GetNamespaceQualifiedCodeNameVisitor extends AbstractStringBuilderV
 	}
 	
 	@Override
-	public int leave(Entity entity) {
+	public int leaveAbstractEntity(AbstractEntity entity) {
 		if (entity == originalEntity || entity instanceof Namespace) {
 			if (prependDelim)
 				sb.append(DELIM);
 			else
 				prependDelim = true;
 			
-			sb.append(entity.getUnqualifiedCodeName());
+			sb.append(entity.getCName());
 		}
 		return CANCEL_THIS;
 	}

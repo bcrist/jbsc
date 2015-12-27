@@ -1,11 +1,13 @@
 package com.magicmoremagic.jbsc.visitors.base;
 
 import java.io.PrintWriter;
-import java.util.*;
+import java.util.Date;
+import java.util.Locale;
+import java.util.Set;
 
 import com.magicmoremagic.jbsc.OutputFileType;
 import com.magicmoremagic.jbsc.objects.Code;
-import com.magicmoremagic.jbsc.objects.base.Entity;
+import com.magicmoremagic.jbsc.objects.base.AbstractEntity;
 import com.magicmoremagic.jbsc.objects.containers.Namespace;
 import com.magicmoremagic.jbsc.objects.containers.Spec;
 import com.magicmoremagic.jbsc.util.CodeGenConfig;
@@ -14,9 +16,9 @@ import com.magicmoremagic.jbsc.util.CodeGenHelper;
 public abstract class AbstractPrintVisitor extends AbstractEntityVisitor {
 
 	protected PrintWriter writer;
-	protected Set<Entity> entitiesToPrint;
+	protected Set<AbstractEntity> entitiesToPrint;
 	
-	public AbstractPrintVisitor(PrintWriter writer, Set<Entity> entitiesToPrint) {
+	public AbstractPrintVisitor(PrintWriter writer, Set<AbstractEntity> entitiesToPrint) {
 		this.writer = writer;
 		this.entitiesToPrint = entitiesToPrint;
 	}
@@ -32,7 +34,7 @@ public abstract class AbstractPrintVisitor extends AbstractEntityVisitor {
 	}
 	
 	@Override
-	public int visit(Entity entity) {
+	public int visitAbstractEntity(AbstractEntity entity) {
 		if (entitiesToPrint != null && !entitiesToPrint.contains(entity))
 			return CANCEL_THIS | CANCEL_CHILDREN;
 		
@@ -66,7 +68,7 @@ public abstract class AbstractPrintVisitor extends AbstractEntityVisitor {
 	@Override
 	public int leave(Namespace namespace) {
 		writer.print("} // namespace ");
-		writer.println(namespace.getQualifiedCodeName(null));
+		writer.println(namespace.getQualifiedCName());
 		writer.println();
 		return CONTINUE;
 	}

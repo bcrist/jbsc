@@ -1,6 +1,6 @@
 package com.magicmoremagic.jbsc.visitors.parentchain;
 
-import com.magicmoremagic.jbsc.objects.base.Entity;
+import com.magicmoremagic.jbsc.objects.base.AbstractEntity;
 import com.magicmoremagic.jbsc.visitors.base.AbstractEntityVisitor;
 
 public class GetFirstAncestorVisitor<T> extends AbstractEntityVisitor {
@@ -18,7 +18,7 @@ public class GetFirstAncestorVisitor<T> extends AbstractEntityVisitor {
 	
 	@SuppressWarnings("unchecked")
 	@Override
-	public int visit(Entity entity) {
+	public int visitAbstractEntity(AbstractEntity entity) {
 		if (ancestorClass.isInstance(entity)) {
 			ancestor = (T)entity;
 			return STOP;
@@ -28,7 +28,7 @@ public class GetFirstAncestorVisitor<T> extends AbstractEntityVisitor {
 	}
 	
 	@Override
-	public int leave(Entity entity) {
+	public int leaveAbstractEntity(AbstractEntity entity) {
 		return STOP;
 	}
 	

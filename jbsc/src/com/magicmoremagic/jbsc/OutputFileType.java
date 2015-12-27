@@ -3,7 +3,7 @@ package com.magicmoremagic.jbsc;
 import java.io.PrintWriter;
 import java.util.Set;
 
-import com.magicmoremagic.jbsc.objects.base.Entity;
+import com.magicmoremagic.jbsc.objects.base.AbstractEntity;
 import com.magicmoremagic.jbsc.objects.containers.Spec;
 import com.magicmoremagic.jbsc.util.CodeGenConfig;
 import com.magicmoremagic.jbsc.visitors.base.*;
@@ -36,19 +36,19 @@ public enum OutputFileType {
 	}
 	
 	public boolean shouldPrintCode(Spec spec) {
-		AbstractSelectionVisitor<Entity> selectionVisitor = outputFileVisitors.getOutputSelectionVisitor();
+		AbstractSelectionVisitor<AbstractEntity> selectionVisitor = outputFileVisitors.getOutputSelectionVisitor();
 		spec.visit(selectionVisitor);
 		AbstractShouldPrintVisitor visitor = outputFileVisitors.getShouldPrintVisitor(selectionVisitor.getSelections());
 		spec.visit(visitor);
 		return visitor.shouldPrint();
 	}
 	
-	public IEntityVisitor getPrintVisitor(PrintWriter writer, Set<Entity> entitiesToPrint) {
+	public IEntityVisitor getPrintVisitor(PrintWriter writer, Set<AbstractEntity> entitiesToPrint) {
 		return outputFileVisitors.getPrintVisitor(writer, entitiesToPrint);
 	}
 	
 	public IEntityVisitor getPrintVisitor(Spec spec, PrintWriter writer) {
-		AbstractSelectionVisitor<Entity> selectionVisitor = outputFileVisitors.getOutputSelectionVisitor();
+		AbstractSelectionVisitor<AbstractEntity> selectionVisitor = outputFileVisitors.getOutputSelectionVisitor();
 		spec.visit(selectionVisitor);
 		return outputFileVisitors.getPrintVisitor(writer, selectionVisitor.getSelections());
 	}

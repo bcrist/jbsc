@@ -1,21 +1,68 @@
 package com.magicmoremagic.jbsc.objects.types;
 
 import java.io.PrintWriter;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Locale;
 
+import com.magicmoremagic.jbsc.OutputFileType;
 import com.magicmoremagic.jbsc.objects.Function;
 import com.magicmoremagic.jbsc.objects.FunctionType;
-import com.magicmoremagic.jbsc.objects.base.EntityContainer;
+import com.magicmoremagic.jbsc.objects.base.AbstractEntity;
+import com.magicmoremagic.jbsc.objects.base.EntityFunctions;
+import com.magicmoremagic.jbsc.objects.base.EntityIncludes;
+import com.magicmoremagic.jbsc.objects.queries.FieldList;
 import com.magicmoremagic.jbsc.util.CodeGenHelper;
 import com.magicmoremagic.jbsc.visitors.base.IEntityVisitor;
 
 public class ColType extends FieldType {
-
-	private static final List<Integer> columnIndex = Collections.unmodifiableList(Arrays.asList(0));
+	
+	private static final Collection<Integer> SQL_INDICES = Collections.unmodifiableCollection(Arrays.asList(0));
+	
+	private FieldList fields = new FieldList() {
+		
+		@Override
+		public FieldList set(java.util.List<FieldRef> fields) {
+			throw new UnsupportedOperationException();
+		}
+		
+		@Override
+		public FieldList add(FieldRef ref) {
+			throw new UnsupportedOperationException();
+		}
+		
+		@Override
+		public FieldList add(FieldType type, String name) {
+			throw new UnsupportedOperationException();
+		}
+		
+		@Override
+		public String getColName(int sqlIndex) {
+			return sqlIndex == 0 ? "" : null;
+		}
+		
+		@Override
+		public ColType getColType(int sqlIndex) {
+			return sqlIndex == 0 ? ColType.this : null;
+		}
+		
+		@Override
+		public Collection<Integer> getSqlIndices() {
+			return SQL_INDICES;
+		}
+		
+		{
+			FieldRef ref = new FieldRef(ColType.this, "", 0);
+			ref.setMeta(true);
+			super.add(ref);
+		}
+	};
 	
 	private String affinity;
 	private String constraints;
-	private Map<FunctionType, ColTypeFunction> functions;
+	private EntityFunctions functions;
+	private EntityFunctions.Mediator funcMediator;
 	
 	public ColType(String name) {
 		this();
@@ -23,46 +70,27 @@ public class ColType extends FieldType {
 	}
 	
 	public ColType() {
-		functions = new EnumMap<>(FunctionType.class);
-		functions.put(FunctionType.ASSIGN, new AssignFunction());
-		functions.put(FunctionType.PARSE, new ParseFunction());
+		funcMediator = new EntityFunctions.Mediator();
+		functions = new EntityFunctions(funcMediator);
+		funcMediator.put(FunctionType.ASSIGN, new AssignFunction());
+		funcMediator.put(FunctionType.PARSE, new ParseFunction());
 	}
 
 	@Override
-	protected void trySetName(String newName) {
-		String oldName = getName();
-		try {
-			for (ColTypeFunction func : functions.values()) {
-				func.setName(func.calculateName(newName));
-			}
-			super.trySetName(newName);
-		} catch (Exception e) {
-			for (ColTypeFunction func : functions.values()) {
-				func.setName(func.calculateName(oldName));
-			}
-			throw e;
-		}
+	protected void onNameChanged(String oldName) {
+		super.onNameChanged(oldName);
+		funcMediator.calculateNames();
 	}
 	
 	@Override
-	protected void trySetParent(EntityContainer newParent) {
-		EntityContainer oldParent = getParent();
-		try {
-			for (Function func : functions.values()) {
-				newParent.addChild(func);
-			}
-			super.trySetParent(newParent);
-		} catch (Exception e) {
-			for (Function func : functions.values()) {
-				oldParent.addChild(func);
-			}
-			throw e;
-		}
+	protected void onParentChanged(AbstractEntity oldParent) {
+		super.onParentChanged(oldParent);
+		funcMediator.setNamespace(getNamespace());
 	}
 	
 	@Override
-	public String getUnqualifiedCodeName() {
-		return CodeGenHelper.toPascalCase(name);
+	public String getCName() {
+		return CodeGenHelper.toPascalCase(getName());
 	}
 	
 	public String getAffinity() {
@@ -84,23 +112,13 @@ public class ColType extends FieldType {
 	}
 
 	@Override
-	public Function getFunction(FunctionType type) {
-		return functions.get(type);
-	}
-
-	@Override
-	public Collection<Integer> getColumnIndices() {
-		return columnIndex;
-	}
-
-	@Override
-	public String getColumnName(int columnIndex) {
-		return columnIndex == 0 ? "" : null;
+	public FieldList fields() {
+		return fields;
 	}
 	
 	@Override
-	public ColType getColumnType(int columnIndex) {
-		return columnIndex == 0 ? this : null;
+	public EntityFunctions functions() {
+		return functions;
 	}
 	
 	@Override
@@ -122,15 +140,16 @@ public class ColType extends FieldType {
 	}
 
 	private abstract class ColTypeFunction extends Function {
-		
+
 		@Override
-		protected void initRequiredIncludes() {
-			super.initRequiredIncludes();
-			requiredIncludes.add("\"be/bed/stmt.hpp\"");
-			requiredIncludes.add("\"be/bed/bed.hpp\"");
+		public EntityIncludes requiredIncludes(OutputFileType type) {
+			switch (type) {
+			case HEADER:
+				return EntityIncludes.BED_STMT_INCLUDES;
+			default:
+				return super.requiredIncludes(type);
+			}
 		}
-		
-		abstract String calculateName(String colTypeName);
 		
 		@Override
 		public boolean isImplementationInline() {
@@ -153,8 +172,8 @@ public class ColType extends FieldType {
 		}
 
 		@Override
-		String calculateName(String colTypeName) {
-			return "assignCol" + CodeGenHelper.toPascalCase(colTypeName);
+		protected String calculateDefaultName() {
+			return "assignCol" + ColType.this.getCName();
 		}
 		
 		@Override
@@ -180,12 +199,12 @@ public class ColType extends FieldType {
 		private void printSignature(PrintWriter writer) {
 			writer.println("template <typename T>");
 			writer.print("bool ");
-			writer.print(getUnqualifiedCodeName());
+			writer.print(getCName());
 			writer.print('(');
 			
-			writer.print(getCodeNameFromMyNamespace("be.bed.Bed", "::be::bed::Bed"));
+			writer.print(lookupCName("be.bed.Bed", "::be::bed::Bed"));
 			writer.print("& bed, ");
-			writer.print(getCodeNameFromMyNamespace("be.bed.CachedStmt", "::be::bed::CachedStmt"));			
+			writer.print(lookupCName("be.bed.CachedStmt", "::be::bed::CachedStmt"));			
 			writer.print("& stmt, int parameter, ");
 			
 			if (!isAssignByValue()) {
@@ -210,8 +229,8 @@ public class ColType extends FieldType {
 		}
 
 		@Override
-		String calculateName(String colTypeName) {
-			return "parseCol" + CodeGenHelper.toPascalCase(colTypeName);
+		protected String calculateDefaultName() {
+			return "parseCol" + ColType.this.getCName();
 		}
 		
 		@Override
@@ -246,11 +265,11 @@ public class ColType extends FieldType {
 		private void printSignature(PrintWriter writer) {
 			writer.println("template <typename T>");
 			writer.print("bool ");
-			writer.print(getUnqualifiedCodeName());
+			writer.print(getCName());
 			writer.print('(');
-			writer.print(getCodeNameFromMyNamespace("be.bed.Bed", "::be::bed::Bed"));
+			writer.print(lookupCName("be.bed.Bed", "::be::bed::Bed"));
 			writer.print("& bed, ");
-			writer.print(getCodeNameFromMyNamespace("be.bed.CachedStmt", "::be::bed::CachedStmt"));
+			writer.print(lookupCName("be.bed.CachedStmt", "::be::bed::CachedStmt"));
 			writer.print("& stmt, int column, T& value)");
 		}
 		

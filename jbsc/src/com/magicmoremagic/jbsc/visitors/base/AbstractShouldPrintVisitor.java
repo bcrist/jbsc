@@ -4,17 +4,23 @@ import java.util.Set;
 
 import com.magicmoremagic.jbsc.objects.Code;
 import com.magicmoremagic.jbsc.objects.Function;
-import com.magicmoremagic.jbsc.objects.base.Entity;
-import com.magicmoremagic.jbsc.objects.base.EntityContainer;
-import com.magicmoremagic.jbsc.objects.containers.*;
-import com.magicmoremagic.jbsc.objects.types.*;
+import com.magicmoremagic.jbsc.objects.base.AbstractContainer;
+import com.magicmoremagic.jbsc.objects.base.AbstractEntity;
+import com.magicmoremagic.jbsc.objects.base.IEntity;
+import com.magicmoremagic.jbsc.objects.containers.Namespace;
+import com.magicmoremagic.jbsc.objects.containers.Spec;
+import com.magicmoremagic.jbsc.objects.containers.Table;
+import com.magicmoremagic.jbsc.objects.queries.Query;
+import com.magicmoremagic.jbsc.objects.types.ClassType;
+import com.magicmoremagic.jbsc.objects.types.ColType;
+import com.magicmoremagic.jbsc.objects.types.FieldType;
 
 public abstract class AbstractShouldPrintVisitor implements IEntityVisitor {
 
 	protected boolean shouldPrint;
-	protected Set<Entity> entitiesToPrint;
+	protected Set<AbstractEntity> entitiesToPrint;
 
-	public AbstractShouldPrintVisitor(Set<Entity> entitiesToPrint) {
+	public AbstractShouldPrintVisitor(Set<AbstractEntity> entitiesToPrint) {
 		this.entitiesToPrint = entitiesToPrint;
 	}
 
@@ -27,12 +33,12 @@ public abstract class AbstractShouldPrintVisitor implements IEntityVisitor {
 	}
 
 	@Override
-	public int init(Entity entity) {
+	public int init(IEntity entity) {
 		return CONTINUE;
 	}
 
 	@Override
-	public int visit(Entity entity) {
+	public int visitAbstractEntity(AbstractEntity entity) {
 		if (shouldPrint)
 			return STOP;
 
@@ -43,17 +49,17 @@ public abstract class AbstractShouldPrintVisitor implements IEntityVisitor {
 	}
 
 	@Override
-	public int leave(Entity entity) {
+	public int leaveAbstractEntity(AbstractEntity entity) {
 		return getResult();
 	}
 
 	@Override
-	public int visit(EntityContainer container) {
+	public int visitAbstractContainer(AbstractContainer container) {
 		return getResult();
 	}
 
 	@Override
-	public int leave(EntityContainer container) {
+	public int leaveAbstractContainer(AbstractContainer container) {
 		return getResult();
 	}
 
@@ -78,12 +84,12 @@ public abstract class AbstractShouldPrintVisitor implements IEntityVisitor {
 	}
 
 	@Override
-	public int visit(FieldType fieldType) {
+	public int visitFieldType(FieldType fieldType) {
 		return getResult();
 	}
 
 	@Override
-	public int leave(FieldType fieldType) {
+	public int leaveFieldType(FieldType fieldType) {
 		return getResult();
 	}
 
@@ -114,6 +120,16 @@ public abstract class AbstractShouldPrintVisitor implements IEntityVisitor {
 
 	@Override
 	public int leave(Table table) {
+		return getResult();
+	}
+	
+	@Override
+	public int visit(Query query) {
+		return getResult();
+	}
+	
+	@Override
+	public int leave(Query query) {
 		return getResult();
 	}
 

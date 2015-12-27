@@ -2,35 +2,41 @@ package com.magicmoremagic.jbsc.visitors.base;
 
 import com.magicmoremagic.jbsc.objects.Code;
 import com.magicmoremagic.jbsc.objects.Function;
-import com.magicmoremagic.jbsc.objects.base.Entity;
-import com.magicmoremagic.jbsc.objects.base.EntityContainer;
-import com.magicmoremagic.jbsc.objects.containers.*;
-import com.magicmoremagic.jbsc.objects.types.*;
+import com.magicmoremagic.jbsc.objects.base.AbstractContainer;
+import com.magicmoremagic.jbsc.objects.base.AbstractEntity;
+import com.magicmoremagic.jbsc.objects.base.IEntity;
+import com.magicmoremagic.jbsc.objects.containers.Namespace;
+import com.magicmoremagic.jbsc.objects.containers.Spec;
+import com.magicmoremagic.jbsc.objects.containers.Table;
+import com.magicmoremagic.jbsc.objects.queries.Query;
+import com.magicmoremagic.jbsc.objects.types.ClassType;
+import com.magicmoremagic.jbsc.objects.types.ColType;
+import com.magicmoremagic.jbsc.objects.types.FieldType;
 
 public abstract class AbstractEntityVisitor implements IEntityVisitor {
 
 	@Override
-	public int init(Entity entity) {
+	public int init(IEntity entity) {
 		return CONTINUE;
 	}
 	
 	@Override
-	public int visit(Entity entity) {
+	public int visitAbstractEntity(AbstractEntity entity) {
 		return CONTINUE;
 	}
 
 	@Override
-	public int leave(Entity entity) {
+	public int leaveAbstractEntity(AbstractEntity entity) {
 		return CONTINUE;
 	}
 
 	@Override
-	public int visit(EntityContainer container) {
+	public int visitAbstractContainer(AbstractContainer container) {
 		return CONTINUE;
 	}
 
 	@Override
-	public int leave(EntityContainer container) {
+	public int leaveAbstractContainer(AbstractContainer container) {
 		return CONTINUE;
 	}
 
@@ -55,12 +61,12 @@ public abstract class AbstractEntityVisitor implements IEntityVisitor {
 	}
 
 	@Override
-	public int visit(FieldType fieldType) {
+	public int visitFieldType(FieldType fieldType) {
 		return CONTINUE;
 	}
 
 	@Override
-	public int leave(FieldType fieldType) {
+	public int leaveFieldType(FieldType fieldType) {
 		return CONTINUE;
 	}
 
@@ -94,6 +100,16 @@ public abstract class AbstractEntityVisitor implements IEntityVisitor {
 		return CONTINUE;
 	}
 
+	@Override
+	public int visit(Query query) {
+		return CONTINUE;
+	}
+
+	@Override
+	public int leave(Query query) {
+		return CONTINUE;
+	}
+	
 	@Override
 	public int visit(Function function) {
 		return CONTINUE;

@@ -4,14 +4,14 @@ package com.magicmoremagic.jbsc.objects.types;
 public class FieldRef {
 	
 	private String name;
-	private int firstColumn;
+	private int firstSqlIndex;
 	private FieldType type;
 	private boolean isTransient;	// exists only in code, allows multiple C++ objects to refer to the same field
 	private boolean isMeta;			// exists only in schema, allows using classTypes for metadata of other fields
 	
-	public FieldRef(FieldType type, String name, int firstColumn) {
+	public FieldRef(FieldType type, String name, int firstSqlIndex) {
 		this.name = name;
-		this.firstColumn = firstColumn;
+		this.firstSqlIndex = firstSqlIndex;
 		this.type = type;
 	}
 	
@@ -25,12 +25,12 @@ public class FieldRef {
 		return this;
 	}
 
-	public int getFirstColumn() {
-		return firstColumn;
+	public int getFirstSqlIndex() {
+		return firstSqlIndex;
 	}
 
-	public FieldRef setFirstColumn(int firstColumn) {
-		this.firstColumn = firstColumn;
+	public FieldRef setFirstSqlIndex(int firstSqlIndex) {
+		this.firstSqlIndex = firstSqlIndex;
 		return this;
 	}
 

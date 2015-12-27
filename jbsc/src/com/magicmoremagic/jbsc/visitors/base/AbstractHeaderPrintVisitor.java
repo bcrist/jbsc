@@ -3,12 +3,12 @@ package com.magicmoremagic.jbsc.visitors.base;
 import java.io.PrintWriter;
 import java.util.Set;
 
-import com.magicmoremagic.jbsc.objects.base.Entity;
+import com.magicmoremagic.jbsc.objects.base.AbstractEntity;
 import com.magicmoremagic.jbsc.objects.containers.Spec;
 
 public abstract class AbstractHeaderPrintVisitor extends AbstractPrintVisitor {
 
-	public AbstractHeaderPrintVisitor(PrintWriter writer, Set<Entity> entitiesToPrint) {
+	public AbstractHeaderPrintVisitor(PrintWriter writer, Set<AbstractEntity> entitiesToPrint) {
 		super(writer, entitiesToPrint);
 	}
 	

@@ -5,16 +5,17 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 import com.magicmoremagic.jbsc.OutputFileType;
-import com.magicmoremagic.jbsc.objects.base.Entity;
+import com.magicmoremagic.jbsc.objects.base.AbstractEntity;
+import com.magicmoremagic.jbsc.objects.base.IEntity;
 import com.magicmoremagic.jbsc.objects.containers.Namespace;
 import com.magicmoremagic.jbsc.objects.containers.Spec;
 import com.magicmoremagic.jbsc.visitors.base.AbstractHeaderPrintVisitor;
 
 public class SqlHeaderPrintVisitor extends AbstractHeaderPrintVisitor {
 
-	private Set<Entity> statements = new LinkedHashSet<>();
+	private Set<AbstractEntity> statements = new LinkedHashSet<>();
 	
-	public SqlHeaderPrintVisitor(PrintWriter writer, Set<Entity> entitiesToPrint) {
+	public SqlHeaderPrintVisitor(PrintWriter writer, Set<AbstractEntity> entitiesToPrint) {
 		super(writer, entitiesToPrint);
 	}
 
@@ -44,7 +45,7 @@ public class SqlHeaderPrintVisitor extends AbstractHeaderPrintVisitor {
 		writer.println("// <[gen-ids in]>");
 		writer.println();
 		
-		for (Entity statement : statements) {
+		for (IEntity statement : statements) {
 			// TODO SQL ID
 		}
 		

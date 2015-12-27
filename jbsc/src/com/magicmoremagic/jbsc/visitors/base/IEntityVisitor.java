@@ -2,10 +2,16 @@ package com.magicmoremagic.jbsc.visitors.base;
 
 import com.magicmoremagic.jbsc.objects.Code;
 import com.magicmoremagic.jbsc.objects.Function;
-import com.magicmoremagic.jbsc.objects.base.Entity;
-import com.magicmoremagic.jbsc.objects.base.EntityContainer;
-import com.magicmoremagic.jbsc.objects.containers.*;
-import com.magicmoremagic.jbsc.objects.types.*;
+import com.magicmoremagic.jbsc.objects.base.AbstractContainer;
+import com.magicmoremagic.jbsc.objects.base.AbstractEntity;
+import com.magicmoremagic.jbsc.objects.base.IEntity;
+import com.magicmoremagic.jbsc.objects.containers.Namespace;
+import com.magicmoremagic.jbsc.objects.containers.Spec;
+import com.magicmoremagic.jbsc.objects.containers.Table;
+import com.magicmoremagic.jbsc.objects.queries.Query;
+import com.magicmoremagic.jbsc.objects.types.ClassType;
+import com.magicmoremagic.jbsc.objects.types.ColType;
+import com.magicmoremagic.jbsc.objects.types.FieldType;
 
 public interface IEntityVisitor {
 	
@@ -16,13 +22,13 @@ public interface IEntityVisitor {
 	public static final int CANCEL_PARENTS = CANCEL_CHILDREN; // only used for parent chain visitation
 	public static final int STOP = 1 << 3;
 	
-	int init(Entity entity);
+	int init(IEntity entity);
 	
-	int visit(Entity entity);
-	int leave(Entity entity);
+	int visitAbstractEntity(AbstractEntity entity);
+	int leaveAbstractEntity(AbstractEntity entity);
 	
-	int visit(EntityContainer container);
-	int leave(EntityContainer container);
+	int visitAbstractContainer(AbstractContainer container);
+	int leaveAbstractContainer(AbstractContainer container);
 	
 	int visit(Spec spec);
 	int leave(Spec spec);
@@ -30,8 +36,8 @@ public interface IEntityVisitor {
 	int visit(Namespace namespace);
 	int leave(Namespace namespace);
 	
-	int visit(FieldType fieldType);
-	int leave(FieldType fieldType);
+	int visitFieldType(FieldType fieldType);
+	int leaveFieldType(FieldType fieldType);
 	
 	int visit(ColType colType);
 	int leave(ColType colType);
@@ -48,4 +54,7 @@ public interface IEntityVisitor {
 	int visit(Code code);
 	int leave(Code code);
 
+	int visit(Query query);
+	int leave(Query query);
+	
 }

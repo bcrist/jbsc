@@ -3,15 +3,31 @@ package com.magicmoremagic.jbsc.parser;
 import java.io.IOException;
 import java.io.Reader;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
-import com.magicmoremagic.jbsc.*;
-import com.magicmoremagic.jbsc.objects.*;
-import com.magicmoremagic.jbsc.objects.base.Entity;
-import com.magicmoremagic.jbsc.objects.base.EntityContainer;
-import com.magicmoremagic.jbsc.objects.base.EntityContainer.ExtractNamespaceResult;
-import com.magicmoremagic.jbsc.objects.containers.*;
-import com.magicmoremagic.jbsc.objects.types.*;
+import com.magicmoremagic.jbsc.ErrorCategory;
+import com.magicmoremagic.jbsc.ErrorType;
+import com.magicmoremagic.jbsc.IErrorHandler;
+import com.magicmoremagic.jbsc.JBSC;
+import com.magicmoremagic.jbsc.OutputFileType;
+import com.magicmoremagic.jbsc.objects.Code;
+import com.magicmoremagic.jbsc.objects.Flag;
+import com.magicmoremagic.jbsc.objects.Function;
+import com.magicmoremagic.jbsc.objects.FunctionType;
+import com.magicmoremagic.jbsc.objects.base.AbstractContainer;
+import com.magicmoremagic.jbsc.objects.base.AbstractEntity;
+import com.magicmoremagic.jbsc.objects.base.AbstractEntity.ExtractNamespaceResult;
+import com.magicmoremagic.jbsc.objects.base.IEntity;
+import com.magicmoremagic.jbsc.objects.containers.Namespace;
+import com.magicmoremagic.jbsc.objects.containers.Spec;
+import com.magicmoremagic.jbsc.objects.containers.Table;
+import com.magicmoremagic.jbsc.objects.types.ClassType;
+import com.magicmoremagic.jbsc.objects.types.ColType;
+import com.magicmoremagic.jbsc.objects.types.FieldRef;
+import com.magicmoremagic.jbsc.objects.types.FieldType;
 import com.magicmoremagic.jbsc.parser.Lexer.Mark;
 
 public class Parser {
@@ -144,7 +160,7 @@ public class Parser {
 		return false;
 	}
 	
-	private boolean pNamespace(EntityContainer parent) {
+	private boolean pNamespace(AbstractContainer parent) {
 		// namespace := 'namespace' id<name> ( ';' | '{' namespace-decls '}' [';'] );
 		if (optionalID("namespace")) {
 			Mark mark = lexer.mark();
@@ -188,7 +204,7 @@ public class Parser {
 		put("no-skip-parse-assign", both);
 	}};
 	
-	private boolean pScopedDecl(EntityContainer parent) {
+	private boolean pScopedDecl(AbstractContainer parent) {
 		// scoped-decl := code | col-type | class-type | table | flag | ';' ;
 		// TODO fieldset
 		
@@ -202,7 +218,7 @@ public class Parser {
 		return false;
 	}
 	
-	private boolean pCode(EntityContainer parent) {
+	private boolean pCode(AbstractContainer parent) {
 		// code := non-inline-code | ['inline' | 'header' | 'sqlid' | 'source'] non-inline-code ;
 		
 		if (pNonInlineCode(parent, OutputFileType.SOURCE)) return true;
@@ -232,7 +248,7 @@ public class Parser {
 		return false;
 	}
 	
-	private boolean pNonInlineCode(EntityContainer parent, OutputFileType type) {
+	private boolean pNonInlineCode(AbstractContainer parent, OutputFileType type) {
 		// non-inline-code := 'code' text<code> ';' ;
 		if (optionalID("code")) {
 			Mark mark = lexer.mark();
@@ -252,7 +268,7 @@ public class Parser {
 		return false;
 	}
 	
-	private boolean pColType(EntityContainer parent) {
+	private boolean pColType(AbstractContainer parent) {
 		// col-type := 'coltype' text '{' col-type-decls '}' [';'] ;
 		if (optionalID("coltype")) {
 			Mark mark = lexer.mark();
@@ -338,7 +354,7 @@ public class Parser {
 		return false;
 	}
 	
-	private boolean pClassType(EntityContainer parent) {
+	private boolean pClassType(AbstractContainer parent) {
 		// class-type := 'type' text '{' class-type-decls '}' [';'] ;
 		if (optionalID("type")) {
 			Mark mark = lexer.mark();
@@ -351,11 +367,11 @@ public class Parser {
 					if (classType.getClassName() == null) {
 						warning(mark.peek(), classType, "No class name set!");
 					} else {
-						EntityContainer classParent = parent;
+						AbstractContainer classParent = parent;
 						try {
 							if (classType.isBuiltin()) {
-								if (parent.getSpec() != null)
-									classParent = parent.getSpec();
+								if (parent.getRoot() != null)
+									classParent = parent.getRoot();
 							} else {
 								ExtractNamespaceResult nsInfo = parent.extractNamespace(classType.getClassName());
 								if (nsInfo.namespace != null) {
@@ -367,7 +383,7 @@ public class Parser {
 							classType.setFunctionNamespace(parent.getNamespace());
 							classParent.addChild(classType);
 						} catch (Exception e) {
-							warning(mark.peek(), parent, "Could not add ClassType '" + classType.getName() + "' to '" + classParent.getQualifiedName() + "'.", e);
+							warning(mark.peek(), parent, "Could not add ClassType '" + classType.getName() + "' to '" + classParent.getFullyQualifiedName() + "'.", e);
 							return true;
 						}
 						
@@ -483,16 +499,16 @@ public class Parser {
 			String fieldName = optionalID();
 			if (fieldName == null) fieldName = "";
 			if (expectEnd() && phase == Phase.PARSE) {
-				EntityContainer parent = classType.getParent();
+				AbstractEntity parent = classType.getParent();
 				if (parent != null) {
-					Entity type = parent.lookupName(typeName);
+					IEntity type = parent.lookupEntity(typeName);
 					if (type instanceof FieldType) {
 						FieldType fieldType = (FieldType)type;
 						try {
 							FieldRef ref = new FieldRef(fieldType, fieldName, -1);
 							ref.setTransient(transientField);
 							ref.setMeta(metaField);
-							classType.addField(ref);
+							classType.fields().add(ref);
 						} catch (Exception e) {
 							warning(mark.peek(), classType, "Could not add FieldRef!", e);
 						}
@@ -527,7 +543,7 @@ public class Parser {
 			Mark mark = lexer.mark();
 			String code = expectText();
 			if (code != null && expectEnd() && phase == Phase.PARSE) {
-				Function func = fieldType.getFunction(function);
+				Function func = fieldType.functions().get(function);
 				String oldCode = func.getCode();
 				if (oldCode != null && !oldCode.equals(code)) {
 					warning(mark.peek(), fieldType, "Code was previously specified as '" + oldCode + "'; overwritten by '" + code + "'.");
@@ -539,7 +555,7 @@ public class Parser {
 		return false;
 	}
 	
-	private boolean pTable(EntityContainer parent) {
+	private boolean pTable(AbstractContainer parent) {
 		// table := 'table' id<name> '{' table-decls '}' [';'] ;
 		if (optionalID("table")) {
 			Mark mark = lexer.mark();
@@ -637,15 +653,15 @@ public class Parser {
 			String fieldName = optionalID();
 			if (fieldName == null) fieldName = "";
 			if (expectEnd()) {
-				EntityContainer parent = table.getParent();
+				AbstractEntity parent = table.getParent();
 				if (parent != null) {
-					Entity type = parent.lookupName(typeName);
+					IEntity type = parent.lookupEntity(typeName);
 					if (type instanceof FieldType) {
 						FieldType fieldType = (FieldType)type;
 						try {
 							FieldRef ref = new FieldRef(fieldType, fieldName, -1);
 							ref.setMeta(metaField);
-							table.addField(ref);
+							table.fields().add(ref);
 						} catch (Exception e) {
 							warning(mark.peek(), table, "Could not add FieldRef!", e);
 						}
@@ -686,7 +702,7 @@ public class Parser {
 	
 	
 	
-	private boolean pEntityFlag(Entity entity, Map<String, Set<Flag>> validFlags) {
+	private boolean pEntityFlag(AbstractEntity entity, Map<String, Set<Flag>> validFlags) {
 		// entity-flag := 'flag' ( entity-flag-list | entity-flag-decl ) ;
 		if (optionalID("flag")) {
 			if (pEntityFlagList(entity, validFlags)) return true;
@@ -702,7 +718,7 @@ public class Parser {
 		return false;
 	}
 	
-	private boolean pEntityFlagList(Entity entity, Map<String, Set<Flag>> validFlags) {
+	private boolean pEntityFlagList(AbstractEntity entity, Map<String, Set<Flag>> validFlags) {
 		// entity-flag-list := '{' entity-flag-decls '}' [';'] ;
 		if (optionalOpen()) {
 			Set<Flag> flagsToSet = EnumSet.noneOf(Flag.class);
@@ -714,13 +730,13 @@ public class Parser {
 		return false;
 	}
 	
-	private boolean pEntityFlagDecls(Entity entity, Set<Flag> flagsToSet, Map<String, Set<Flag>> validFlags) {
+	private boolean pEntityFlagDecls(AbstractEntity entity, Set<Flag> flagsToSet, Map<String, Set<Flag>> validFlags) {
 		// entity-flag-decls := entity-flag-decl entity-flag-decls | ;
 		while (pEntityFlagDecl(entity, flagsToSet, validFlags));
 		return true;
 	}
 	
-	private boolean pEntityFlagDecl(Entity entity, Set<Flag> flagsToSet, Map<String, Set<Flag>> validFlags) {
+	private boolean pEntityFlagDecl(AbstractEntity entity, Set<Flag> flagsToSet, Map<String, Set<Flag>> validFlags) {
 		// entity-flag-decl := id<flagtype> ';' ;
 		Mark mark = lexer.mark();
 		String id = optionalID();
@@ -738,13 +754,13 @@ public class Parser {
 		return false;
 	}
 	
-	private void setEntityFlags(Entity entity, Set<Flag> flagsToSet) {
+	private void setEntityFlags(IEntity entity, Set<Flag> flagsToSet) {
 		for (Flag f : flagsToSet) {
-			entity.setFlag(f, true);
+			entity.flags().add(f);
 		}
 	}
  
-	private boolean pImplementationInclude(Entity entity, Phase phase) {
+	private boolean pImplementationInclude(IEntity entity, Phase phase) {
 		// implementation-include := 'implementation' 'include' ( implementation-include-list | implementation-include-name ) ;
 		if (optionalID("implementation")) {
 			if (expectID("include")) {
@@ -758,7 +774,7 @@ public class Parser {
 		return false;
 	}
 	
-	private boolean pImplementationIncludeList(Entity entity, Phase phase) {
+	private boolean pImplementationIncludeList(IEntity entity, Phase phase) {
 		// implementation-include-list := '{' implementation-include-names '}' [';'] ;
 		if (optionalOpen()) {
 			if (pImplementationIncludeNames(entity, phase) && expectClose() && optionalEnd()) return true;
@@ -767,13 +783,13 @@ public class Parser {
 		return false;
 	}
 	
-	private boolean pImplementationIncludeNames(Entity entity, Phase phase) {
+	private boolean pImplementationIncludeNames(IEntity entity, Phase phase) {
 		// implementation-include-names := implementation-include-name implementation-include-names | ;
 		while (pImplementationIncludeName(entity, phase));
 		return true;
 	}
 	
-	private boolean pImplementationIncludeName(Entity entity, Phase phase) {
+	private boolean pImplementationIncludeName(IEntity entity, Phase phase) {
 		// implementation-include-name := ( text.astring | text ) ';' ;
 		if (optional(TokenType.TEXT, false)) {
 			Token token = lexer.consume();
@@ -791,14 +807,14 @@ public class Parser {
 			}
 			
 			if (expectEnd() && phase == Phase.PARSE) {
-				entity.addImplementationInclude(include);
+				entity.requiredIncludes(OutputFileType.SOURCE).add(include);
 			}
 			return true;
 		}
 		return false;
 	}
 		
-	private boolean pRequiredInclude(Entity entity, Phase phase) {
+	private boolean pRequiredInclude(IEntity entity, Phase phase) {
 		// required-include := 'include' ( required-include-list | required-include-name ) ;
 		if (optionalID("include")) {
 			if (pRequiredIncludeList(entity, phase)) return true;
@@ -810,7 +826,7 @@ public class Parser {
 		return false;
 	}
 	
-	private boolean pRequiredIncludeList(Entity entity, Phase phase) {
+	private boolean pRequiredIncludeList(IEntity entity, Phase phase) {
 		// required-include-list := '{' required-include-names '}' [';'] ;
 		if (optionalOpen()) {
 			if (pRequiredIncludeNames(entity, phase) && expectClose() && optionalEnd()) return true;
@@ -819,13 +835,13 @@ public class Parser {
 		return false;
 	}
 	
-	private boolean pRequiredIncludeNames(Entity entity, Phase phase) {
+	private boolean pRequiredIncludeNames(IEntity entity, Phase phase) {
 		// required-include-names := required-include-name required-include-names | ;
 		while (pRequiredIncludeName(entity, phase));
 		return true;
 	}
 	
-	private boolean pRequiredIncludeName(Entity entity, Phase phase) {
+	private boolean pRequiredIncludeName(IEntity entity, Phase phase) {
 		// required-include-name := ( text.astring | text ) ';' ;
 		if (optional(TokenType.TEXT, false)) {
 			Token token = lexer.consume();
@@ -842,7 +858,7 @@ public class Parser {
 						include = "\"" + include + "\"";
 					}
 				}
-				entity.addRequiredInclude(include);
+				entity.requiredIncludes(OutputFileType.HEADER).add(include);
 			}
 			return true;
 		}
@@ -1009,7 +1025,7 @@ public class Parser {
 		error(ErrorType.WARNING, token, null, message, null);
 	}
 		
-	private void warning(Token token, Entity entity, String message) {
+	private void warning(Token token, AbstractEntity entity, String message) {
 		error(ErrorType.WARNING, token, entity, message, null);
 	}
 	
@@ -1017,7 +1033,7 @@ public class Parser {
 		error(ErrorType.WARNING, token, null, message, ex);
 	}
 		
-	private void warning(Token token, Entity entity, String message, Exception ex) {
+	private void warning(Token token, AbstractEntity entity, String message, Exception ex) {
 		error(ErrorType.WARNING, token, entity, message, ex);
 	}
 	
@@ -1025,11 +1041,11 @@ public class Parser {
 		error(ErrorType.PARSE_ERROR, token, null, message, null);
 	}
 		
-	private void parseError(Token token, Entity entity, String message) {
+	private void parseError(Token token, AbstractEntity entity, String message) {
 		error(ErrorType.PARSE_ERROR, token, entity, message, null);
 	}
 	
-	private void fatal(ErrorType type, Token token, Entity entity, String message, RuntimeException ex) {
+	private void fatal(ErrorType type, Token token, AbstractEntity entity, String message, RuntimeException ex) {
 		error(type, token, entity, message, ex);
 		if (ex != null) {
 			throw ex;
@@ -1038,7 +1054,7 @@ public class Parser {
 		}
 	}
 	
-	private void error(ErrorType type, Token token, Entity entity, String message, Exception ex) {
+	private void error(ErrorType type, Token token, AbstractEntity entity, String message, Exception ex) {
 		if (errorHandler != null) {
 			StringBuilder sb = new StringBuilder();
 			
@@ -1076,7 +1092,7 @@ public class Parser {
 				sb.append(": ");
 				sb.append(entity.getClass().getSimpleName());
 				sb.append(' ');
-				sb.append(entity.getQualifiedName());
+				sb.append(entity.getFullyQualifiedName());
 			}
 			
 			if (message != null) {
