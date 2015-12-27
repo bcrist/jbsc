@@ -1,15 +1,8 @@
 package com.magicmoremagic.jbsc.objects.base;
 
-import static com.magicmoremagic.jbsc.visitors.base.IEntityVisitor.CANCEL_CHILDREN;
-import static com.magicmoremagic.jbsc.visitors.base.IEntityVisitor.CANCEL_SIBLINGS;
-import static com.magicmoremagic.jbsc.visitors.base.IEntityVisitor.CANCEL_THIS;
-import static com.magicmoremagic.jbsc.visitors.base.IEntityVisitor.CONTINUE;
-import static com.magicmoremagic.jbsc.visitors.base.IEntityVisitor.STOP;
+import static com.magicmoremagic.jbsc.visitors.base.IEntityVisitor.*;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 
 import com.magicmoremagic.jbsc.objects.containers.Namespace;
 import com.magicmoremagic.jbsc.util.CodeGenConfig;

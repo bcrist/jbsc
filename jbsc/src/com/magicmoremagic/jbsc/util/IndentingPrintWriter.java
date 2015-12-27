@@ -1,13 +1,6 @@
 package com.magicmoremagic.jbsc.util;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InterruptedIOException;
-import java.io.OutputStream;
-import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
-import java.io.Writer;
+import java.io.*;
 
 public class IndentingPrintWriter extends PrintWriter {
 

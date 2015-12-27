@@ -4,16 +4,10 @@ import java.util.Set;
 
 import com.magicmoremagic.jbsc.objects.Code;
 import com.magicmoremagic.jbsc.objects.Function;
-import com.magicmoremagic.jbsc.objects.base.AbstractContainer;
-import com.magicmoremagic.jbsc.objects.base.AbstractEntity;
-import com.magicmoremagic.jbsc.objects.base.IEntity;
-import com.magicmoremagic.jbsc.objects.containers.Namespace;
-import com.magicmoremagic.jbsc.objects.containers.Spec;
-import com.magicmoremagic.jbsc.objects.containers.Table;
+import com.magicmoremagic.jbsc.objects.base.*;
+import com.magicmoremagic.jbsc.objects.containers.*;
 import com.magicmoremagic.jbsc.objects.queries.Query;
-import com.magicmoremagic.jbsc.objects.types.ClassType;
-import com.magicmoremagic.jbsc.objects.types.ColType;
-import com.magicmoremagic.jbsc.objects.types.FieldType;
+import com.magicmoremagic.jbsc.objects.types.*;
 
 public abstract class AbstractShouldPrintVisitor implements IEntityVisitor {
 

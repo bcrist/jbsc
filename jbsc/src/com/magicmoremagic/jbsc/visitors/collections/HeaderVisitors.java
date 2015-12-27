@@ -5,7 +5,7 @@ import java.util.Set;
 
 import com.magicmoremagic.jbsc.objects.Function;
 import com.magicmoremagic.jbsc.objects.base.AbstractEntity;
-import com.magicmoremagic.jbsc.visitors.*;
+import com.magicmoremagic.jbsc.visitors.HeaderPrintVisitor;
 import com.magicmoremagic.jbsc.visitors.base.*;
 
 public class HeaderVisitors implements IOutputFileVisitors {

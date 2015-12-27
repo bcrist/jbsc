@@ -1,8 +1,6 @@
 package com.magicmoremagic.jbsc.visitors.parentchain;
 
-import com.magicmoremagic.jbsc.objects.base.AbstractEntity;
-import com.magicmoremagic.jbsc.objects.base.Entities;
-import com.magicmoremagic.jbsc.objects.base.IEntity;
+import com.magicmoremagic.jbsc.objects.base.*;
 import com.magicmoremagic.jbsc.objects.containers.Namespace;
 import com.magicmoremagic.jbsc.objects.types.ClassType;
 import com.magicmoremagic.jbsc.visitors.base.AbstractStringBuilderVisitor;

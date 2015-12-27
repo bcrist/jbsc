@@ -1,13 +1,8 @@
 package com.magicmoremagic.jbsc.objects.queries;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
-import com.magicmoremagic.jbsc.objects.types.ColType;
-import com.magicmoremagic.jbsc.objects.types.FieldRef;
-import com.magicmoremagic.jbsc.objects.types.FieldType;
+import com.magicmoremagic.jbsc.objects.types.*;
 
 public class FieldList {
 	

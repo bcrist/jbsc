@@ -1,18 +1,11 @@
 package com.magicmoremagic.jbsc.parser;
 
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.LineNumberReader;
-import java.io.Reader;
-import java.io.StringReader;
+import java.io.*;
 import java.nio.file.Path;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.magicmoremagic.jbsc.ErrorCategory;
-import com.magicmoremagic.jbsc.ErrorType;
-import com.magicmoremagic.jbsc.IErrorHandler;
+import com.magicmoremagic.jbsc.*;
 
 public class Lexer {
 	

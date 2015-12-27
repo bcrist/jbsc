@@ -1,9 +1,6 @@
 package com.magicmoremagic.jbsc.objects.base;
 
-import static com.magicmoremagic.jbsc.visitors.base.IEntityVisitor.CANCEL_PARENTS;
-import static com.magicmoremagic.jbsc.visitors.base.IEntityVisitor.CANCEL_THIS;
-import static com.magicmoremagic.jbsc.visitors.base.IEntityVisitor.CONTINUE;
-import static com.magicmoremagic.jbsc.visitors.base.IEntityVisitor.STOP;
+import static com.magicmoremagic.jbsc.visitors.base.IEntityVisitor.*;
 
 import java.util.Collection;
 import java.util.Collections;

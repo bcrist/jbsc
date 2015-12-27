@@ -1,9 +1,6 @@
 package com.magicmoremagic.jbsc.objects.base;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.EnumSet;
-import java.util.Set;
+import java.util.*;
 
 import com.magicmoremagic.jbsc.objects.Flag;
 

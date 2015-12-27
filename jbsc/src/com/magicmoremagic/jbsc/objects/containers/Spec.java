@@ -1,15 +1,10 @@
 package com.magicmoremagic.jbsc.objects.containers;
 
 import java.nio.file.Path;
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.*;
 
 import com.magicmoremagic.jbsc.OutputFileType;
-import com.magicmoremagic.jbsc.objects.base.AbstractContainer;
-import com.magicmoremagic.jbsc.objects.base.AbstractEntity;
-import com.magicmoremagic.jbsc.objects.base.EntityFlags;
-import com.magicmoremagic.jbsc.objects.base.EntityIncludes;
+import com.magicmoremagic.jbsc.objects.base.*;
 import com.magicmoremagic.jbsc.visitors.base.IEntityVisitor;
 
 public class Spec extends AbstractContainer {

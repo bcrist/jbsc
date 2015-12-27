@@ -1,17 +1,12 @@
 package com.magicmoremagic.jbsc.objects.types;
 
 import java.io.PrintWriter;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Locale;
+import java.util.*;
 
 import com.magicmoremagic.jbsc.OutputFileType;
 import com.magicmoremagic.jbsc.objects.Function;
 import com.magicmoremagic.jbsc.objects.FunctionType;
-import com.magicmoremagic.jbsc.objects.base.AbstractEntity;
-import com.magicmoremagic.jbsc.objects.base.EntityFunctions;
-import com.magicmoremagic.jbsc.objects.base.EntityIncludes;
+import com.magicmoremagic.jbsc.objects.base.*;
 import com.magicmoremagic.jbsc.objects.queries.FieldList;
 import com.magicmoremagic.jbsc.util.CodeGenHelper;
 import com.magicmoremagic.jbsc.visitors.base.IEntityVisitor;

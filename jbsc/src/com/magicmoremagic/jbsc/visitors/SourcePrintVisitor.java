@@ -1,10 +1,7 @@
 package com.magicmoremagic.jbsc.visitors;
 
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import com.magicmoremagic.jbsc.OutputFileType;
 import com.magicmoremagic.jbsc.objects.Function;

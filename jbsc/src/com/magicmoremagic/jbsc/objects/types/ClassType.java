@@ -1,14 +1,10 @@
 package com.magicmoremagic.jbsc.objects.types;
 
 import java.io.PrintWriter;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
+import java.util.*;
 
 import com.magicmoremagic.jbsc.OutputFileType;
-import com.magicmoremagic.jbsc.objects.Flag;
-import com.magicmoremagic.jbsc.objects.Function;
-import com.magicmoremagic.jbsc.objects.FunctionType;
+import com.magicmoremagic.jbsc.objects.*;
 import com.magicmoremagic.jbsc.objects.base.EntityFunctions;
 import com.magicmoremagic.jbsc.objects.base.EntityIncludes;
 import com.magicmoremagic.jbsc.objects.containers.Namespace;

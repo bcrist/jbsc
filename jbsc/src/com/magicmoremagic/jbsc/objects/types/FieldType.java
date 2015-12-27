@@ -2,10 +2,7 @@ package com.magicmoremagic.jbsc.objects.types;
 
 import com.magicmoremagic.jbsc.OutputFileType;
 import com.magicmoremagic.jbsc.objects.Flag;
-import com.magicmoremagic.jbsc.objects.base.AbstractEntity;
-import com.magicmoremagic.jbsc.objects.base.EntityFlags;
-import com.magicmoremagic.jbsc.objects.base.EntityFunctions;
-import com.magicmoremagic.jbsc.objects.base.EntityIncludes;
+import com.magicmoremagic.jbsc.objects.base.*;
 import com.magicmoremagic.jbsc.objects.queries.FieldList;
 import com.magicmoremagic.jbsc.visitors.base.IEntityVisitor;
 

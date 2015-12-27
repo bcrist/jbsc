@@ -1,9 +1,6 @@
 package com.magicmoremagic.jbsc.objects.queries;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 import com.magicmoremagic.jbsc.objects.Function;
 import com.magicmoremagic.jbsc.objects.base.AbstractContainer;

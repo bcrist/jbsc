@@ -4,7 +4,7 @@ import java.io.PrintWriter;
 import java.util.Set;
 
 import com.magicmoremagic.jbsc.objects.base.AbstractEntity;
-import com.magicmoremagic.jbsc.visitors.*;
+import com.magicmoremagic.jbsc.visitors.SqlHeaderPrintVisitor;
 import com.magicmoremagic.jbsc.visitors.base.*;
 
 public class SqlHeaderVisitors implements IOutputFileVisitors {
