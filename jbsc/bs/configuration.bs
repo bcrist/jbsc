@@ -166,6 +166,25 @@ type PropertyValue {
 	
 }
 
+aggregate AsDf {
+	fields {
+		I32 id;
+		I32 a;
+		I32 b;
+		AssetId aid;
+	}
+}
+
+aggregate ABC {
+	fields {
+		AsDf t;
+		AsDf t2;
+	}
+	parse "";
+	assign "";
+	flag assign-by-value;
+}
+
 
 
 table test {

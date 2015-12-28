@@ -27,7 +27,7 @@ public class GetRequiredIncludesVisitor extends AbstractSelectionVisitor<String>
 	}
 	
 	@Override
-	public int visit(Spec spec) {
+	public int visitSpec(Spec spec) {
 		if (type == OutputFileType.HEADER) {
 			for (Spec s : spec.getIncludedSpecs()) {
 				if (s.getName().equals("__internal__")) continue;

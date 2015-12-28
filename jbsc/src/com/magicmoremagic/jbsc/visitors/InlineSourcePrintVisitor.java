@@ -23,8 +23,8 @@ public class InlineSourcePrintVisitor extends AbstractPrintVisitor {
 	}
 	
 	@Override
-	public int visit(Spec spec) {
-		super.visit(spec);
+	public int visitSpec(Spec spec) {
+		super.visitSpec(spec);
 		printGuard(spec);
 		return CONTINUE;
 	}
@@ -51,7 +51,7 @@ public class InlineSourcePrintVisitor extends AbstractPrintVisitor {
 	}
 	
 	@Override
-	public int visit(Function function) {
+	public int visitFunction(Function function) {
 		if (function.isImplementationInline()) {
 			CodeGenHelper.printCode(CodeGenConfig.FUNCTION_IMPL_PREFIX, writer);
 			function.printImplementation(writer);
@@ -62,7 +62,7 @@ public class InlineSourcePrintVisitor extends AbstractPrintVisitor {
 	}
 	
 	@Override
-	public int leave(Spec spec) {
+	public int leaveSpec(Spec spec) {
 		printGuardEnd(spec);
 		return CONTINUE;
 	}

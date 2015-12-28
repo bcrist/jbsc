@@ -13,8 +13,8 @@ public abstract class AbstractHeaderPrintVisitor extends AbstractPrintVisitor {
 	}
 	
 	@Override
-	public int visit(Spec spec) {
-		super.visit(spec);
+	public int visitSpec(Spec spec) {
+		super.visitSpec(spec);
 		printGuard(spec);
 		return CONTINUE;
 	}
@@ -31,7 +31,7 @@ public abstract class AbstractHeaderPrintVisitor extends AbstractPrintVisitor {
 	}
 	
 	@Override
-	public int leave(Spec spec) {
+	public int leaveSpec(Spec spec) {
 		printGuardEnd(spec);
 		return CONTINUE;
 	}

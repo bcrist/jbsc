@@ -24,11 +24,11 @@ public class InlineSourceVisitors implements IOutputFileVisitors {
 			{ shouldPrint = true; } // TODO remove me!
 			
 			@Override
-			public int visit(Function function) {
+			public int visitFunction(Function function) {
 				if (!function.isImplementationInline())
 					shouldPrint = true;
 				
-				return super.visit(function);
+				return super.visitFunction(function);
 			}
 			
 		};

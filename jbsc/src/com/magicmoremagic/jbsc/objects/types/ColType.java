@@ -120,7 +120,7 @@ public class ColType extends FieldType {
 	protected int onVisitorVisit(IEntityVisitor visitor) {
 		int result = super.onVisitorVisit(visitor);
 		if ((result & (IEntityVisitor.CANCEL_THIS | IEntityVisitor.STOP)) == 0) {
-			result |= visitor.visit(this);
+			result |= visitor.visitColType(this);
 		}
 		return result;
 	}
@@ -129,7 +129,7 @@ public class ColType extends FieldType {
 	protected int onVisitorLeave(IEntityVisitor visitor) {
 		int result = super.onVisitorLeave(visitor);
 		if ((result & (IEntityVisitor.CANCEL_THIS | IEntityVisitor.STOP)) == 0) {
-			result |= visitor.leave(this);
+			result |= visitor.leaveColType(this);
 		}
 		return result;
 	}

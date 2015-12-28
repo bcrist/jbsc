@@ -40,7 +40,7 @@ public abstract class AbstractPrintVisitor extends AbstractEntityVisitor {
 	}
 	
 	@Override
-	public int visit(Spec spec) {
+	public int visitSpec(Spec spec) {
 		printHeader(spec);
 		return CONTINUE;
 	}
@@ -55,7 +55,7 @@ public abstract class AbstractPrintVisitor extends AbstractEntityVisitor {
 	}
 	
 	@Override
-	public int visit(Namespace namespace) {
+	public int visitNamespace(Namespace namespace) {
 		writer.print("namespace ");
 		writer.print(namespace.getName());
 		writer.println(" {");
@@ -64,7 +64,7 @@ public abstract class AbstractPrintVisitor extends AbstractEntityVisitor {
 	}
 	
 	@Override
-	public int leave(Namespace namespace) {
+	public int leaveNamespace(Namespace namespace) {
 		writer.print("} // namespace ");
 		writer.println(namespace.getQualifiedCName());
 		writer.println();
@@ -72,7 +72,7 @@ public abstract class AbstractPrintVisitor extends AbstractEntityVisitor {
 	}
 
 	@Override
-	public int visit(Code code) {
+	public int visitCode(Code code) {
 		if (code.getType() == getOutputType()) {
 			CodeGenHelper.printCode(code.getCode(), writer);
 			writer.println();

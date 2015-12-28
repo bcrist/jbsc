@@ -6,7 +6,6 @@ import java.util.Set;
 
 import com.magicmoremagic.jbsc.OutputFileType;
 import com.magicmoremagic.jbsc.objects.base.AbstractEntity;
-import com.magicmoremagic.jbsc.objects.base.IEntity;
 import com.magicmoremagic.jbsc.objects.containers.Namespace;
 import com.magicmoremagic.jbsc.objects.containers.Spec;
 import com.magicmoremagic.jbsc.visitors.base.AbstractHeaderPrintVisitor;
@@ -25,29 +24,29 @@ public class SqlHeaderPrintVisitor extends AbstractHeaderPrintVisitor {
 	}
 
 	@Override
-	public int visit(Namespace namespace) {
+	public int visitNamespace(Namespace namespace) {
 		// everything's preprocessor here; no namespaces necessary
 		return CONTINUE;
 	}
 	
 	@Override
-	public int leave(Namespace namespace) {
+	public int leaveNamespace(Namespace namespace) {
 		// everything's preprocessor here; no namespaces necessary
 		return CONTINUE;
 	}
 	
 	
 	@Override
-	public int leave(Spec spec) {
+	public int leaveSpec(Spec spec) {
 
 		writer.println("#ifdef BE_ID_NAMES_ENABLED");
 		writer.println();
 		writer.println("// <[gen-ids in]>");
 		writer.println();
 		
-		for (IEntity statement : statements) {
-			// TODO SQL ID
-		}
+//		for (IEntity statement : statements) {
+//			// TODO SQL ID
+//		}
 		
 		writer.println();
 		writer.println("// </[gen-ids in]>");
@@ -70,7 +69,7 @@ public class SqlHeaderPrintVisitor extends AbstractHeaderPrintVisitor {
 		
 		statements.clear();
 		
-		return super.leave(spec);
+		return super.leaveSpec(spec);
 	}
 	
 }

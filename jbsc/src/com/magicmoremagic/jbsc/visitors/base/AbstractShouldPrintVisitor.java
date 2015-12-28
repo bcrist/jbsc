@@ -58,22 +58,22 @@ public abstract class AbstractShouldPrintVisitor implements IEntityVisitor {
 	}
 
 	@Override
-	public int visit(Spec spec) {
+	public int visitSpec(Spec spec) {
 		return getResult();
 	}
 
 	@Override
-	public int leave(Spec spec) {
+	public int leaveSpec(Spec spec) {
 		return getResult();
 	}
 
 	@Override
-	public int visit(Namespace namespace) {
+	public int visitNamespace(Namespace namespace) {
 		return getResult();
 	}
 
 	@Override
-	public int leave(Namespace namespace) {
+	public int leaveNamespace(Namespace namespace) {
 		return getResult();
 	}
 
@@ -88,72 +88,72 @@ public abstract class AbstractShouldPrintVisitor implements IEntityVisitor {
 	}
 
 	@Override
-	public int visit(ColType colType) {
+	public int visitColType(ColType colType) {
 		return getResult();
 	}
 
 	@Override
-	public int leave(ColType colType) {
+	public int leaveColType(ColType colType) {
 		return getResult();
 	}
 
 	@Override
-	public int visit(ClassType classType) {
+	public int visitClassType(ClassType classType) {
 		return getResult();
 	}
 
 	@Override
-	public int leave(ClassType classType) {
+	public int leaveClassType(ClassType classType) {
 		return getResult();
 	}
 	
 	@Override
-	public int visit(AggregateType aggregateType) {
+	public int visitAggregateType(AggregateType aggregateType) {
 		return getResult();
 	}
 	
 	@Override
-	public int leave(AggregateType aggregateType) {
+	public int leaveAggregateType(AggregateType aggregateType) {
 		return getResult();
 	}
 
 	@Override
-	public int visit(Table table) {
+	public int visitTable(Table table) {
 		return getResult();
 	}
 
 	@Override
-	public int leave(Table table) {
+	public int leaveTable(Table table) {
 		return getResult();
 	}
 	
 	@Override
-	public int visit(Query query) {
+	public int visitQuery(Query query) {
 		return getResult();
 	}
 	
 	@Override
-	public int leave(Query query) {
+	public int leaveQuery(Query query) {
 		return getResult();
 	}
 
 	@Override
-	public int visit(Function function) {
+	public int visitFunction(Function function) {
 		return getResult();
 	}
 
 	@Override
-	public int leave(Function function) {
+	public int leaveFunction(Function function) {
 		return getResult();
 	}
 
 	@Override
-	public int visit(Code code) {
+	public int visitCode(Code code) {
 		return getResult();
 	}
 
 	@Override
-	public int leave(Code code) {
+	public int leaveCode(Code code) {
 		return getResult();
 	}
 

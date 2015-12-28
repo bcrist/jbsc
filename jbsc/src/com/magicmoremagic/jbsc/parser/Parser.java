@@ -194,6 +194,7 @@ public class Parser {
 		if (pCode(parent)) return true;
 		if (pColType(parent)) return true;
 		if (pClassType(parent)) return true;
+		if (pAggregateType(parent)) return true;
 		if (pTable(parent)) return true;
 		if (pEntityFlag(parent, validScopeFlags)) return true;
 		if (optionalEnd()) return true;
@@ -339,7 +340,7 @@ public class Parser {
 	}
 	
 	private boolean pClassType(AbstractContainer parent) {
-		// class-type := 'type' text '{' class-type-decls '}' [';'] ;
+		// class-type := 'type' id<name> '{' class-type-decls '}' [';'] ;
 		if (optionalID("type")) {
 			Mark mark = lexer.mark();
 			String name = expectID();
@@ -404,7 +405,7 @@ public class Parser {
 		// class-type-decl := class-name | class-type-fields | flag | field-type-decl ;		
 		
 		if (pClassName(classType, phase)) return true;
-		if (pClassTypeFields(classType, phase)) return true;
+		if (pFieldTypeFields(classType, phase)) return true;
 		if (pEntityFlag(classType, validClassTypeFlags)) return true;
 		if (pFieldTypeDecl(classType, phase)) return true;
 		
@@ -429,61 +430,107 @@ public class Parser {
 		return false;
 	}
 	
-	private boolean pClassTypeFields(ClassType classType, Phase phase) {
-		// class-type-fields := 'fields' ( class-type-fields-list | class-type-field-decl ) ;
-		if (optionalID("fields")) {
-			if (pClassTypeFieldsList(classType, phase)) return true;
-			if (!pClassTypeFieldDecl(classType, phase)) {
-				parseError(lexer.peek(), classType, "Expected field-decl!");
+	private boolean pAggregateType(AbstractContainer parent) {
+		// aggregate-type := 'aggregate' id<name> '{' aggregate-type-decls '}' [';'] ;
+		if (optionalID("aggregate")) {
+			Mark mark = lexer.mark();
+			String name = expectID();
+			if (name != null) {
+				AggregateType type = new AggregateType(name);
+				try {
+					parent.addChild(type);
+				} catch (Exception e) {
+					warning(mark.peek(), parent, "Could not add AggregateType '" + type.getName() + "' to '" + parent.getFullyQualifiedName() + "'.", e);
+				}
+				if (expectOpen() && pAggregateTypeDecls(type) && expectClose()) {
+					optionalEnd();
+				}
 			}
 			return true;
 		}
 		return false;
 	}
 	
-	private boolean pClassTypeFieldsList(ClassType classType, Phase phase) {
-		// class-type-fields-list := '{' class-type-field-decls '}' [';'] ;
-		if (optionalOpen()) {
-			if (pClassTypeFieldDecls(classType, phase) && expectClose() && optionalEnd()) return true;
-			return true;
-		}
-		return false;
-	}
-	
-	private boolean pClassTypeFieldDecls(ClassType classType, Phase phase) {
-		// class-type-field-decls := class-type-field-decl class-type-field-decls | ;
-		while (pClassTypeFieldDecl(classType, phase));
+	private boolean pAggregateTypeDecls(AggregateType type) {
+		// aggregate-type-decls := aggregate-type-decl aggregate-type-decls | ;
+		while (pAggregateTypeDecl(type));
 		return true;
 	}
 	
-	private boolean pClassTypeFieldDecl(ClassType classType, Phase phase) {
-		// class-type-field-decl := ['transient' | 'meta'] class-type-simple-field-decl ;
-		if (optionalID("transient")) {
-			if (!pClassTypeSimpleFieldDecl(classType, phase, true, false)) {
-				parseError(lexer.peek(), classType, "Expected field-decl!");
-			}
-			return true;
-		}
-		if (optionalID("meta")) {
-			if (!pClassTypeSimpleFieldDecl(classType, phase, false, true)) {
-				parseError(lexer.peek(), classType, "Expected field-decl!");
-			}
-			return true;
-		}
-		if (pClassTypeSimpleFieldDecl(classType, phase, false, false)) return true;
+	@SuppressWarnings("serial")	private static final Map<String, Set<Flag>> validAggregateTypeFlags = new HashMap<String, Set<Flag>>() {{
+		put("assign-by-value", EnumSet.of(Flag.ASSIGN_BY_VALUE));
+		put("no-skip-parse", EnumSet.of(Flag.NO_SKIP_PARSE));
+		put("no-skip-assign", EnumSet.of(Flag.NO_SKIP_ASSIGN));
+		EnumSet<Flag> both = EnumSet.of(Flag.NO_SKIP_PARSE, Flag.NO_SKIP_ASSIGN);
+		put("no-skip-assign-parse", both);
+		put("no-skip-parse-assign", both);
+	}};
+	
+	private boolean pAggregateTypeDecl(AggregateType type) {
+		// aggregate-type-decl := field-type-fields | flag | field-type-decl ;
+		
+		if (pFieldTypeFields(type, Phase.PARSE)) return true;
+		if (pEntityFlag(type, validAggregateTypeFlags)) return true;
+		if (pFieldTypeDecl(type, Phase.PARSE)) return true;
 		
 		return false;
 	}
 	
-	private boolean pClassTypeSimpleFieldDecl(ClassType classType, Phase phase, boolean transientField, boolean metaField) {
-		// class-type-simple-field-decl := id<type> [id<name>] ';' ;
+	
+	private boolean pFieldTypeFields(FieldType type, Phase phase) {
+		// field-type-fields := 'fields' ( field-type-fields-list | field-type-field-decl ) ;
+		if (optionalID("fields")) {
+			if (pFieldTypeFieldsList(type, phase)) return true;
+			if (!pFieldTypeFieldDecl(type, phase)) {
+				parseError(lexer.peek(), type, "Expected field-decl!");
+			}
+			return true;
+		}
+		return false;
+	}
+	
+	private boolean pFieldTypeFieldsList(FieldType type, Phase phase) {
+		// field-type-fields-list := '{' field-type-field-decls '}' [';'] ;
+		if (optionalOpen()) {
+			if (pFieldTypeFieldDecls(type, phase) && expectClose() && optionalEnd()) return true;
+			return true;
+		}
+		return false;
+	}
+	
+	private boolean pFieldTypeFieldDecls(FieldType type, Phase phase) {
+		// field-type-field-decls := field-type-field-decl field-type-field-decls | ;
+		while (pFieldTypeFieldDecl(type, phase));
+		return true;
+	}
+	
+	private boolean pFieldTypeFieldDecl(FieldType type, Phase phase) {
+		// field-type-field-decl := ['transient' | 'meta'] unqualified-field-type-field-decl ;
+		if (optionalID("transient")) {
+			if (!pUnqualifiedFieldTypeFieldDecl(type, phase, true, false)) {
+				parseError(lexer.peek(), type, "Expected field-decl!");
+			}
+			return true;
+		}
+		if (optionalID("meta")) {
+			if (!pUnqualifiedFieldTypeFieldDecl(type, phase, false, true)) {
+				parseError(lexer.peek(), type, "Expected field-decl!");
+			}
+			return true;
+		}
+		if (pUnqualifiedFieldTypeFieldDecl(type, phase, false, false)) return true;
+		
+		return false;
+	}
+	
+	private boolean pUnqualifiedFieldTypeFieldDecl(FieldType parent, Phase phase, boolean transientField, boolean metaField) {
+		// unqualified-field-type-field-decl := id<type> [id<name>] ';' ;
 		Mark mark = lexer.mark();
 		String typeName = optionalID();
 		if (typeName != null) {
 			String fieldName = optionalID();
 			if (fieldName == null) fieldName = "";
 			if (expectEnd() && phase == Phase.PARSE) {
-				AbstractEntity parent = classType.getParent();
 				if (parent != null) {
 					IEntity type = parent.lookupEntity(typeName);
 					if (type instanceof FieldType) {
@@ -492,15 +539,14 @@ public class Parser {
 							FieldRef ref = new FieldRef(fieldType, fieldName, -1);
 							ref.setTransient(transientField);
 							ref.setMeta(metaField);
-							classType.fields().add(ref);
+							parent.fields().add(ref);
 						} catch (Exception e) {
-							warning(mark.peek(), classType, "Could not add FieldRef!", e);
+							warning(mark.peek(), parent, "Could not add FieldRef!", e);
 						}
 						return true;
 					}
-				}
-				
-				warning(mark.peek(), classType, typeName + " does not define a FieldType!");
+				}				
+				warning(mark.peek(), parent, typeName + " does not define a FieldType!");
 			}
 			return true;
 		}
@@ -538,7 +584,7 @@ public class Parser {
 		return false;
 	}
 	
-	private boolean pTable(AbstractContainer parent) {
+	private boolean pTable(AbstractEntity parent) {
 		// table := 'table' id<name> '{' table-decls '}' [';'] ;
 		if (optionalID("table")) {
 			Mark mark = lexer.mark();
@@ -574,6 +620,7 @@ public class Parser {
 //		put("no-skip-assign-parse", both);
 //		put("no-skip-parse-assign", both);
 	}};
+
 	private boolean pTableDecl(Table table) {
 		// table-decl := table-fields | index | fieldset | query | table | flag | ';' ;
 		
@@ -687,7 +734,7 @@ public class Parser {
 	
 	private boolean pEntityFlag(AbstractEntity entity, Map<String, Set<Flag>> validFlags) {
 		// entity-flag := 'flag' ( entity-flag-list | entity-flag-decl ) ;
-		if (optionalID("flag")) {
+		if (optionalID("flag") || optionalID("flags")) {
 			if (pEntityFlagList(entity, validFlags)) return true;
 			
 			Set<Flag> flagsToSet = EnumSet.noneOf(Flag.class);
@@ -865,6 +912,7 @@ public class Parser {
 	
 	// checks if the available token is of the specified type and subtype
 	// if consume is true, the token will be consumed if it matches.
+	@SuppressWarnings("unused")
 	private boolean optional(TokenType type, TokenSubtype subtype, boolean consume) {
 		Token t = lexer.peek();
 		if (t != null && t.getType() == type && t.getSubtype() == subtype) {
@@ -878,6 +926,7 @@ public class Parser {
 	
 	// consumes an ID token if it is available and has the provided value.
 	// If not available, triggers an error.
+	@SuppressWarnings("unused")
 	private boolean expectID(String id) {
 		return expect(TokenType.ID, id, true);
 	}
@@ -945,6 +994,7 @@ public class Parser {
 	
 	// like optional(TokenType, TokenSubtype, boolean) but if the expected token
 	// is not available, a PARSE_ERROR will be triggered.
+	@SuppressWarnings("unused")
 	private boolean expect(TokenType type, TokenSubtype subtype, boolean consume) {
 		Token t = lexer.peek();
 		if (t != null && t.getType() == type && t.getSubtype() == subtype) {
@@ -957,6 +1007,7 @@ public class Parser {
 		}
 	}
 	
+	@SuppressWarnings("unused")
 	private void warning(Token token, String message) {
 		error(ErrorType.WARNING, token, null, message, null);
 	}
@@ -965,6 +1016,7 @@ public class Parser {
 		error(ErrorType.WARNING, token, entity, message, null);
 	}
 	
+	@SuppressWarnings("unused")
 	private void warning(Token token, String message, Exception ex) {
 		error(ErrorType.WARNING, token, null, message, ex);
 	}

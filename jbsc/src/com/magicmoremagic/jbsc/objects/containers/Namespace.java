@@ -19,7 +19,7 @@ public class Namespace extends AbstractContainer {
 	protected int onVisitorVisit(IEntityVisitor visitor) {
 		int result = super.onVisitorVisit(visitor);
 		if ((result & (IEntityVisitor.CANCEL_THIS | IEntityVisitor.STOP)) == 0) {
-			result |= visitor.visit(this);
+			result |= visitor.visitNamespace(this);
 		}
 		return result;
 	}
@@ -28,7 +28,7 @@ public class Namespace extends AbstractContainer {
 	protected int onVisitorLeave(IEntityVisitor visitor) {
 		int result = super.onVisitorLeave(visitor);
 		if ((result & (IEntityVisitor.CANCEL_THIS | IEntityVisitor.STOP)) == 0) {
-			result |= visitor.leave(this);
+			result |= visitor.leaveNamespace(this);
 		}
 		return result;
 	}

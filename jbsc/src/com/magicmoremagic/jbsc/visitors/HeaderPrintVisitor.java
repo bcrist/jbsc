@@ -25,8 +25,8 @@ public class HeaderPrintVisitor extends AbstractHeaderPrintVisitor {
 	}
 
 	@Override
-	public int visit(Spec spec) {
-		super.visit(spec);		
+	public int visitSpec(Spec spec) {
+		super.visitSpec(spec);		
 		printIncludes(spec);
 		return CONTINUE;
 	}
@@ -49,7 +49,7 @@ public class HeaderPrintVisitor extends AbstractHeaderPrintVisitor {
 	}
 	
 	@Override
-	public int visit(Function function) {
+	public int visitFunction(Function function) {
 		CodeGenHelper.printCode(CodeGenConfig.FUNCTION_DECL_PREFIX, writer);
 		function.printDeclaration(writer);
 		writer.println();
@@ -58,9 +58,9 @@ public class HeaderPrintVisitor extends AbstractHeaderPrintVisitor {
 	
 	
 	@Override
-	public int leave(Spec spec) {
+	public int leaveSpec(Spec spec) {
 		printInl(spec);
-		super.leave(spec);
+		super.leaveSpec(spec);
 		return CONTINUE;
 	}
 	
@@ -80,7 +80,7 @@ public class HeaderPrintVisitor extends AbstractHeaderPrintVisitor {
 	}
 
 	@Override
-	public int visit(AggregateType aggregateType) {
+	public int visitAggregateType(AggregateType aggregateType) {
 		aggregateType.printClassDeclaration(writer);
 		return CONTINUE;
 	}

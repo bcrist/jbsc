@@ -54,7 +54,7 @@ public class Code extends AbstractEntity {
 	protected int onVisitorVisit(IEntityVisitor visitor) {
 		int result = super.onVisitorVisit(visitor);
 		if ((result & (IEntityVisitor.CANCEL_THIS | IEntityVisitor.STOP)) == 0) {
-			result |= visitor.visit(this);
+			result |= visitor.visitCode(this);
 		}
 		return result;
 	}
@@ -63,7 +63,7 @@ public class Code extends AbstractEntity {
 	protected int onVisitorLeave(IEntityVisitor visitor) {
 		int result = super.onVisitorLeave(visitor);
 		if ((result & (IEntityVisitor.CANCEL_THIS | IEntityVisitor.STOP)) == 0) {
-			result |= visitor.leave(this);
+			result |= visitor.leaveCode(this);
 		}
 		return result;
 	}

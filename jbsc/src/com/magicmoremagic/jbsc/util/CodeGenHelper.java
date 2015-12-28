@@ -17,6 +17,18 @@ public class CodeGenHelper {
 		return val;
 	}
 	
+	public static void tryPrintln(PrintWriter writer) {
+		tryPrintln(writer, 0);
+	}
+	
+	public static void tryIndentPrintln(PrintWriter writer) {
+		tryPrintln(writer, 1);
+	}
+	
+	public static void tryUnindentPrintln(PrintWriter writer) {
+		tryPrintln(writer, -1);
+	}
+	
 	public static void tryPrintln(PrintWriter writer, int indent) {
 		if (writer instanceof IndentingPrintWriter) {
 			IndentingPrintWriter ipw = (IndentingPrintWriter)writer;

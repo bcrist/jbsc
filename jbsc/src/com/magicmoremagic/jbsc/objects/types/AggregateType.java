@@ -55,7 +55,7 @@ public class AggregateType extends FieldType {
 		writer.print("struct ");
 		writer.print(getCName());
 		writer.print(" {");
-		CodeGenHelper.tryPrintln(writer, 1);
+		CodeGenHelper.tryIndentPrintln(writer);
 		
 		boolean first = true;
 		for (FieldRef ref : fields.get()) {
@@ -72,11 +72,12 @@ public class AggregateType extends FieldType {
 			writer.print(ref.getType().getQualifiedCName(getNamespace()));
 			writer.print(' ');
 			writer.print(CodeGenHelper.toCamelCase(fieldName));
-			
+			writer.print(';');
 		}
 		
-		CodeGenHelper.tryPrintln(writer, -1);
+		CodeGenHelper.tryUnindentPrintln(writer);
 		writer.println("};");
+		CodeGenHelper.tryPrintln(writer);
 		return this;
 	}
 	
@@ -94,7 +95,7 @@ public class AggregateType extends FieldType {
 	protected int onVisitorVisit(IEntityVisitor visitor) {
 		int result = super.onVisitorVisit(visitor);
 		if ((result & (IEntityVisitor.CANCEL_THIS | IEntityVisitor.STOP)) == 0) {
-			result |= visitor.visit(this);
+			result |= visitor.visitAggregateType(this);
 		}
 		return result;
 	}
@@ -103,7 +104,7 @@ public class AggregateType extends FieldType {
 	protected int onVisitorLeave(IEntityVisitor visitor) {
 		int result = super.onVisitorLeave(visitor);
 		if ((result & (IEntityVisitor.CANCEL_THIS | IEntityVisitor.STOP)) == 0) {
-			result |= visitor.leave(this);
+			result |= visitor.leaveAggregateType(this);
 		}
 		return result;
 	}

@@ -24,34 +24,34 @@ public interface IEntityVisitor {
 	int visitAbstractContainer(AbstractContainer container);
 	int leaveAbstractContainer(AbstractContainer container);
 	
-	int visit(Spec spec);
-	int leave(Spec spec);
+	int visitSpec(Spec spec);
+	int leaveSpec(Spec spec);
 	
-	int visit(Namespace namespace);
-	int leave(Namespace namespace);
+	int visitNamespace(Namespace namespace);
+	int leaveNamespace(Namespace namespace);
 	
 	int visitFieldType(FieldType fieldType);
 	int leaveFieldType(FieldType fieldType);
 	
-	int visit(ColType colType);
-	int leave(ColType colType);
+	int visitColType(ColType colType);
+	int leaveColType(ColType colType);
 	
-	int visit(ClassType classType);
-	int leave(ClassType classType);
+	int visitClassType(ClassType classType);
+	int leaveClassType(ClassType classType);
 	
-	int visit(AggregateType aggregateType);
-	int leave(AggregateType aggregateType);
+	int visitAggregateType(AggregateType aggregateType);
+	int leaveAggregateType(AggregateType aggregateType);
 	
-	int visit(Table table);
-	int leave(Table table);
+	int visitTable(Table table);
+	int leaveTable(Table table);
 	
-	int visit(Function function);
-	int leave(Function function);
+	int visitFunction(Function function);
+	int leaveFunction(Function function);
 	
-	int visit(Code code);
-	int leave(Code code);
+	int visitCode(Code code);
+	int leaveCode(Code code);
 
-	int visit(Query query);
-	int leave(Query query);
+	int visitQuery(Query query);
+	int leaveQuery(Query query);
 	
 }

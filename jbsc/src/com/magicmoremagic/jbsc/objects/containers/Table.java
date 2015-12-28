@@ -1,39 +1,23 @@
 package com.magicmoremagic.jbsc.objects.containers;
 
-import com.magicmoremagic.jbsc.objects.base.AbstractContainer;
-import com.magicmoremagic.jbsc.objects.base.EntityFlags;
-import com.magicmoremagic.jbsc.objects.queries.FieldList;
-import com.magicmoremagic.jbsc.util.CodeGenHelper;
+import com.magicmoremagic.jbsc.objects.types.AggregateType;
 import com.magicmoremagic.jbsc.visitors.base.IEntityVisitor;
 
-public class Table extends AbstractContainer {
+public class Table extends AggregateType {
 
-	private FieldList fields;
+	public Table(String name) {
+		super(name);
+	}
 	
 	public Table() {
-		super(new EntityFlags());
-		fields = new FieldList();
-	}
-	
-	public Table(String name) {
-		this();
-		setName(name);
-	}
-	
-	@Override
-	public String getCName() {
-		return CodeGenHelper.toPascalCase(getName());
-	}
-	
-	public FieldList fields() {
-		return fields;
+		super();
 	}
 	
 	@Override
 	protected int onVisitorVisit(IEntityVisitor visitor) {
 		int result = super.onVisitorVisit(visitor);
 		if ((result & (IEntityVisitor.CANCEL_THIS | IEntityVisitor.STOP)) == 0) {
-			result |= visitor.visit(this);
+			result |= visitor.visitTable(this);
 		}
 		return result;
 	}
@@ -42,9 +26,9 @@ public class Table extends AbstractContainer {
 	protected int onVisitorLeave(IEntityVisitor visitor) {
 		int result = super.onVisitorLeave(visitor);
 		if ((result & (IEntityVisitor.CANCEL_THIS | IEntityVisitor.STOP)) == 0) {
-			result |= visitor.leave(this);
+			result |= visitor.leaveTable(this);
 		}
 		return result;
 	}
-
+	
 }
