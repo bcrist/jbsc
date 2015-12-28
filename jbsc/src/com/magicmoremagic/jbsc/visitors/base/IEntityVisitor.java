@@ -39,6 +39,9 @@ public interface IEntityVisitor {
 	int visit(ClassType classType);
 	int leave(ClassType classType);
 	
+	int visit(AggregateType aggregateType);
+	int leave(AggregateType aggregateType);
+	
 	int visit(Table table);
 	int leave(Table table);
 	

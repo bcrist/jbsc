@@ -94,7 +94,7 @@ public class FieldList {
 	
 	private int getNextUnusedSqlIndex() {
 		Collection<Integer> usedIndices = getSqlIndices();
-		for (int i = 1; i < 100; ++i) {
+		for (int i = 0; i < 100; ++i) {
 			if (!usedIndices.contains(i))
 				return i;
 		}

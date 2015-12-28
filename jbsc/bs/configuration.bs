@@ -183,7 +183,7 @@ table test {
 		fields {
 			I32 count "COUNT(*)";
 			I32 maxa "MAX(a)";
-			I32 maxb "MAX(b);
+			I32 maxb "MAX(b)";
 		}
 		where id;
 	}

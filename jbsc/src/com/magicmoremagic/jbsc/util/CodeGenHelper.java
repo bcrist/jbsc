@@ -17,6 +17,21 @@ public class CodeGenHelper {
 		return val;
 	}
 	
+	public static void tryPrintln(PrintWriter writer, int indent) {
+		if (writer instanceof IndentingPrintWriter) {
+			IndentingPrintWriter ipw = (IndentingPrintWriter)writer;
+			while (indent > 0) {
+				ipw.indent();
+				--indent;
+			}
+			while (indent < 0) {
+				ipw.unindent();
+				++indent;
+			}
+			ipw.println();
+		}
+	}
+	
 	
 	public static String concat(String... strings) {
 		StringBuilder sb = new StringBuilder();
@@ -47,6 +62,30 @@ public class CodeGenHelper {
 			
 			if (c == '_' || c == ' ') {
 				capitalize = true;
+			} else {
+				if (capitalize) {
+					capitalize = false;
+					sb.append(Character.toUpperCase(c));
+				} else {
+					sb.append(c);
+				}
+			}
+		}
+		return sb.toString();
+	}
+	
+	public static String toCamelCase(String s) {
+		if (s == null || s.isEmpty())
+			return s;
+		
+		StringBuilder sb = new StringBuilder(s.length());
+		int length = s.length();
+		boolean capitalize = false;
+		for (int i = 0; i < length; ++i) {
+			char c = s.charAt(i);
+			
+			if (c == '_' || c == ' ') {
+				capitalize = sb.length() > 0;
 			} else {
 				if (capitalize) {
 					capitalize = false;

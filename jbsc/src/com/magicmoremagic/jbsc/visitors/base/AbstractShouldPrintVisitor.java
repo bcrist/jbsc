@@ -106,6 +106,16 @@ public abstract class AbstractShouldPrintVisitor implements IEntityVisitor {
 	public int leave(ClassType classType) {
 		return getResult();
 	}
+	
+	@Override
+	public int visit(AggregateType aggregateType) {
+		return getResult();
+	}
+	
+	@Override
+	public int leave(AggregateType aggregateType) {
+		return getResult();
+	}
 
 	@Override
 	public int visit(Table table) {

@@ -83,6 +83,16 @@ public abstract class AbstractEntityVisitor implements IEntityVisitor {
 	public int leave(ClassType classType) {
 		return CONTINUE;
 	}
+	
+	@Override
+	public int visit(AggregateType aggregateType) {
+		return CONTINUE;
+	}
+	
+	@Override
+	public int leave(AggregateType aggregateType) {
+		return CONTINUE;
+	}
 
 	@Override
 	public int visit(Table table) {

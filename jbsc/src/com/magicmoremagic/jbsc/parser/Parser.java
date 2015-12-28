@@ -202,9 +202,10 @@ public class Parser {
 	}
 	
 	private boolean pCode(AbstractContainer parent) {
-		// code := non-inline-code | ['inline' | 'header' | 'sqlid' | 'source'] non-inline-code ;
+		// code := [code-qualifier] unqualified-code ;
+		// code-qualifier := 'inline' | 'header' | 'sqlid' | 'source' ;
 		
-		if (pNonInlineCode(parent, OutputFileType.SOURCE)) return true;
+		if (pUnqualifiedCode(parent, OutputFileType.SOURCE)) return true;
 		
 		Mark mark = lexer.mark();
 		String token = optionalID();
@@ -223,7 +224,7 @@ public class Parser {
 				return false;
 			}
 			
-			if (pNonInlineCode(parent, type)) return true;
+			if (pUnqualifiedCode(parent, type)) return true;
 			
 			mark.restore();
 			return false;
@@ -231,8 +232,8 @@ public class Parser {
 		return false;
 	}
 	
-	private boolean pNonInlineCode(AbstractContainer parent, OutputFileType type) {
-		// non-inline-code := 'code' text<code> ';' ;
+	private boolean pUnqualifiedCode(AbstractContainer parent, OutputFileType type) {
+		// unqualified-code := 'code' text<code> ';' ;
 		if (optionalID("code")) {
 			Mark mark = lexer.mark();
 			String codeString = expectText();
@@ -508,9 +509,8 @@ public class Parser {
 	}
 	
 	private boolean pFieldTypeDecl(FieldType fieldType, Phase phase) {
-		// field-type-decl := implementation-include | required-include | parse | assign | ';' ;
+		// field-type-decl := required-include | parse | assign | ';' ;
 		
-		if (pImplementationInclude(fieldType, phase)) return true;
 		if (pRequiredInclude(fieldType, phase)) return true;
 		if (pFieldTypeFunctionCode(fieldType, phase, FunctionType.PARSE)) return true;
 		if (pFieldTypeFunctionCode(fieldType, phase, FunctionType.ASSIGN)) return true;
@@ -742,89 +742,42 @@ public class Parser {
 			entity.flags().add(f);
 		}
 	}
- 
-	private boolean pImplementationInclude(IEntity entity, Phase phase) {
-		// implementation-include := 'implementation' 'include' ( implementation-include-list | implementation-include-name ) ;
-		if (optionalID("implementation")) {
-			if (expectID("include")) {
-				if (pImplementationIncludeList(entity, phase)) return true;
-				if (!pImplementationIncludeName(entity, phase)) {
-					parseError(lexer.peek(), "Expected filename!");
-				}
-			}
-			return true;
-		}
-		return false;
-	}
 	
-	private boolean pImplementationIncludeList(IEntity entity, Phase phase) {
-		// implementation-include-list := '{' implementation-include-names '}' [';'] ;
-		if (optionalOpen()) {
-			if (pImplementationIncludeNames(entity, phase) && expectClose() && optionalEnd()) return true;
-			return true;
-		}
-		return false;
-	}
-	
-	private boolean pImplementationIncludeNames(IEntity entity, Phase phase) {
-		// implementation-include-names := implementation-include-name implementation-include-names | ;
-		while (pImplementationIncludeName(entity, phase));
-		return true;
-	}
-	
-	private boolean pImplementationIncludeName(IEntity entity, Phase phase) {
-		// implementation-include-name := ( text.astring | text ) ';' ;
-		if (optional(TokenType.TEXT, false)) {
-			Token token = lexer.consume();
-			String include = token.getValue();
-			if (token.getSubtype() == TokenSubtype.ASTRING) {
-				include = "<" + include + ">";
-			}
-			
-			if (!include.isEmpty()) {
-				char first = include.charAt(0);
-				char last = include.charAt(include.length() - 1);
-				if (first != '<' && first != '"' || last != '>' && last != '"') {
-					include = "\"" + include + "\"";
-				}
-			}
-			
-			if (expectEnd() && phase == Phase.PARSE) {
-				entity.requiredIncludes(OutputFileType.SOURCE).add(include);
-			}
-			return true;
-		}
-		return false;
-	}
-		
 	private boolean pRequiredInclude(IEntity entity, Phase phase) {
-		// required-include := 'include' ( required-include-list | required-include-name ) ;
+		// required-include := ['implementation'] 'include' ( required-include-list | required-include-name ) ;
+		OutputFileType type = OutputFileType.HEADER;
+		Mark mark = lexer.mark();
+		if (optionalID("implementation"))
+			type = OutputFileType.SOURCE;
+		
 		if (optionalID("include")) {
-			if (pRequiredIncludeList(entity, phase)) return true;
-			if (!pRequiredIncludeName(entity, phase)) {
+			if (pRequiredIncludeList(entity, type, phase)) return true;
+			if (!pRequiredIncludeName(entity, type, phase)) {
 				parseError(lexer.peek(), "Expected filename!");
 			}
 			return true;
 		}
+		
+		mark.restore();
 		return false;
 	}
 	
-	private boolean pRequiredIncludeList(IEntity entity, Phase phase) {
+	private boolean pRequiredIncludeList(IEntity entity, OutputFileType type, Phase phase) {
 		// required-include-list := '{' required-include-names '}' [';'] ;
 		if (optionalOpen()) {
-			if (pRequiredIncludeNames(entity, phase) && expectClose() && optionalEnd()) return true;
+			if (pRequiredIncludeNames(entity, type, phase) && expectClose() && optionalEnd()) return true;
 			return true;
 		}
 		return false;
 	}
 	
-	private boolean pRequiredIncludeNames(IEntity entity, Phase phase) {
+	private boolean pRequiredIncludeNames(IEntity entity, OutputFileType type, Phase phase) {
 		// required-include-names := required-include-name required-include-names | ;
-		while (pRequiredIncludeName(entity, phase));
+		while (pRequiredIncludeName(entity, type, phase));
 		return true;
 	}
 	
-	private boolean pRequiredIncludeName(IEntity entity, Phase phase) {
+	private boolean pRequiredIncludeName(IEntity entity, OutputFileType type, Phase phase) {
 		// required-include-name := ( text.astring | text ) ';' ;
 		if (optional(TokenType.TEXT, false)) {
 			Token token = lexer.consume();
@@ -841,7 +794,7 @@ public class Parser {
 						include = "\"" + include + "\"";
 					}
 				}
-				entity.requiredIncludes(OutputFileType.HEADER).add(include);
+				entity.requiredIncludes(type).add(include);
 			}
 			return true;
 		}

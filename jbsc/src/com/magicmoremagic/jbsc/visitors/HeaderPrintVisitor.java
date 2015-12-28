@@ -7,6 +7,7 @@ import com.magicmoremagic.jbsc.OutputFileType;
 import com.magicmoremagic.jbsc.objects.Function;
 import com.magicmoremagic.jbsc.objects.base.AbstractEntity;
 import com.magicmoremagic.jbsc.objects.containers.Spec;
+import com.magicmoremagic.jbsc.objects.types.AggregateType;
 import com.magicmoremagic.jbsc.util.CodeGenConfig;
 import com.magicmoremagic.jbsc.util.CodeGenHelper;
 import com.magicmoremagic.jbsc.visitors.base.AbstractHeaderPrintVisitor;
@@ -78,4 +79,10 @@ public class HeaderPrintVisitor extends AbstractHeaderPrintVisitor {
 		writer.println();
 	}
 
+	@Override
+	public int visit(AggregateType aggregateType) {
+		aggregateType.printClassDeclaration(writer);
+		return CONTINUE;
+	}
+	
 }
