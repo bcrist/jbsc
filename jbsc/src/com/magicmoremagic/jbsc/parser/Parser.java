@@ -478,8 +478,8 @@ public class Parser {
 	
 	
 	private boolean pFieldTypeFields(FieldType type, Phase phase) {
-		// field-type-fields := 'fields' ( field-type-fields-list | field-type-field-decl ) ;
-		if (optionalID("fields")) {
+		// field-type-fields := ('fields' | 'field') ( field-type-fields-list | field-type-field-decl ) ;
+		if (optionalID("fields") || optionalID("field")) {
 			if (pFieldTypeFieldsList(type, phase)) return true;
 			if (!pFieldTypeFieldDecl(type, phase)) {
 				parseError(lexer.peek(), type, "Expected field-decl!");

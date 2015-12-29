@@ -6,7 +6,7 @@ import com.magicmoremagic.jbsc.objects.base.*;
 import com.magicmoremagic.jbsc.objects.queries.FieldList;
 import com.magicmoremagic.jbsc.visitors.base.IEntityVisitor;
 
-public abstract class FieldType extends AbstractEntity {
+public abstract class FieldType extends AbstractContainer {
 
 	private EntityIncludes headerIncludes = new EntityIncludes();
 	private EntityIncludes sourceIncludes = new EntityIncludes();

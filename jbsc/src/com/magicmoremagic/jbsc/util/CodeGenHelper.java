@@ -40,8 +40,8 @@ public class CodeGenHelper {
 				ipw.unindent();
 				++indent;
 			}
-			ipw.println();
 		}
+		writer.println();
 	}
 	
 	

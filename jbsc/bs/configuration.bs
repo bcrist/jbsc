@@ -166,66 +166,6 @@ type PropertyValue {
 	
 }
 
-aggregate AsDf {
-	fields {
-		I32 id;
-		I32 a;
-		I32 b;
-		AssetId aid;
-	}
-}
-
-aggregate ABC {
-	fields {
-		AsDf t;
-		AsDf t2;
-	}
-	parse "";
-	assign "";
-	flag assign-by-value;
-}
-
-
-
-table test {
-	fields {
-		I32 id;
-		I32 a;
-		I32 b;
-	}
-	
-	fieldset value {
-		* except id;
-	}
-
-	select query customQuery {
-		fields {
-			I32 count "COUNT(*)";
-			I32 maxa "MAX(a)";
-			I32 maxb "MAX(b)";
-		}
-		where id;
-	}
-
-	select query load {
-		fields value;
-		where id;
-		limit 1;
-	}
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
 table configuration {
 	fields {
 		Id id;

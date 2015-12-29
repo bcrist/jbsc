@@ -5,7 +5,6 @@ import java.util.Collection;
 
 import com.magicmoremagic.jbsc.objects.base.AbstractEntity;
 import com.magicmoremagic.jbsc.util.CodeGenHelper;
-import com.magicmoremagic.jbsc.util.IndentingPrintWriter;
 import com.magicmoremagic.jbsc.visitors.base.IEntityVisitor;
 
 public abstract class Function extends AbstractEntity {
@@ -59,10 +58,7 @@ public abstract class Function extends AbstractEntity {
 	
 	protected void printFunctionBodyOpen(PrintWriter writer) {
 		writer.print("{");
-		if (writer instanceof IndentingPrintWriter) {
-			((IndentingPrintWriter)writer).indent();
-		}
-		writer.println();
+		CodeGenHelper.tryIndentPrintln(writer);
 	}
 	
 	protected void printGeneratedCode(PrintWriter writer) {
@@ -72,10 +68,7 @@ public abstract class Function extends AbstractEntity {
 		}
 	}
 	protected void printFunctionBodyClose(PrintWriter writer) {
-		if (writer instanceof IndentingPrintWriter) {
-			((IndentingPrintWriter)writer).unindent();
-		}
-		writer.println();
+		CodeGenHelper.tryUnindentPrintln(writer);
 		writer.println("}");
 	}
 	
