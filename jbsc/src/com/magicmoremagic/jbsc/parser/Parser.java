@@ -622,87 +622,15 @@ public class Parser {
 	}};
 
 	private boolean pTableDecl(Table table) {
-		// table-decl := table-fields | index | fieldset | query | table | flag | ';' ;
+		// table-decl := field-type-fields | index | fieldset | query | table | flag | ';' ;
 		
-		if (pTableFields(table)) return true;
+		if (pFieldTypeFields(table, Phase.PARSE)) return true;
 //		if (pTableIndex(table)) return true;	// TODO
 //		if (pFieldSet(table)) return true;		// TODO
 //		if (pQuery(table)) return true;			// TODO
 		if (pTable(table)) return true;
 		if (pEntityFlag(table, validTableFlags)) return true;
 		if (optionalEnd()) return true;
-		
-		return false;
-	}
-	
-	private boolean pTableFields(Table table) {
-		// table-fields := 'fields' ( table-fields-list | table-field-decl ) ;
-		if (optionalID("fields")) {
-			if (pTableFieldsList(table)) return true;
-			if (!pTableFieldDecl(table)) {
-				parseError(lexer.peek(), table, "Expected table-decl!");
-			}
-			return true;
-		}
-		return false;
-	}
-	
-	private boolean pTableFieldsList(Table table) {
-		// table-fields-list := '{' table-field-decls '}' [';'] ;
-		if (optionalOpen()) {
-			if (pTableFieldDecls(table) && expectClose() && optionalEnd()) return true;
-			return true;
-		}
-		return false;
-	}
-	
-	private boolean pTableFieldDecls(Table table) {
-		// table-field-decls := table-field-decl table-field-decls | ;
-		while (pTableFieldDecl(table));
-		return true;
-	}
-	
-	private boolean pTableFieldDecl(Table table) {
-		// table-field-decl := ['meta'] table-simple-field-decl ;
-		if (optionalID("meta")) {
-			if (!pTableSimpleFieldDecl(table, true)) {
-				parseError(lexer.peek(), table, "Expected table-decl!");
-			}
-			return true;
-		}
-		if (pTableSimpleFieldDecl(table, false)) return true;
-		
-		return false;
-	}
-	
-	private boolean pTableSimpleFieldDecl(Table table, boolean metaField) {
-		// table-simple-field-decl := id<type> [id<name>] ';' ;
-		Mark mark = lexer.mark();
-		String typeName = optionalID();
-		if (typeName != null) {
-			String fieldName = optionalID();
-			if (fieldName == null) fieldName = "";
-			if (expectEnd()) {
-				AbstractEntity parent = table.getParent();
-				if (parent != null) {
-					IEntity type = parent.lookupEntity(typeName);
-					if (type instanceof FieldType) {
-						FieldType fieldType = (FieldType)type;
-						try {
-							FieldRef ref = new FieldRef(fieldType, fieldName, -1);
-							ref.setMeta(metaField);
-							table.fields().add(ref);
-						} catch (Exception e) {
-							warning(mark.peek(), table, "Could not add FieldRef!", e);
-						}
-						return true;
-					}
-				}
-				
-				warning(mark.peek(), table, typeName + " does not define a FieldType!");
-			}
-			return true;
-		}
 		
 		return false;
 	}

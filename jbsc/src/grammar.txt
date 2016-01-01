@@ -21,27 +21,33 @@ class-type := 'type' id<name> '{' class-type-decls '}' [';'] ;
 class-type-decls := class-type-decl class-type-decls | ;
 class-type-decl := class-name | type-fields | flag | field-type-decl ;
 class-name := 'class' text<classname> ';' ;
-
 aggregate-type := 'aggregate' id<name> '{' aggregate-type-decls '}' [';'] ;
 aggregate-type-decls := aggregate-type-decl aggregate-type-decls | ;
 aggregate-type-decl := field-type-fields | flag | field-type-decl ;
-
-field-type-fields := 'fields' ( field-type-fields-list | field-type-field-decl ) ;
+field-type-fields := ( 'field' | 'fields' ) ( field-type-fields-list | field-type-field-decl ) ;
 field-type-fields-list := '{' field-type-field-decls '}' [';'] ;
 field-type-field-decls := field-type-field-decl field-type-field-decls | ;
 field-type-field-decl := ['transient' | 'meta'] unqualified-field-type-field-decl ;
 unqualified-field-type-field-decl := id<type> [id<name>] ';' ;
- 
 field-type-decl := required-include | parse | assign | ';' ;
 field-type-function-code := function-name text ';' ;
 table := 'table' id<name> '{' table-decls '}' [';'] ;
 table-decls := table-decl table-decls | ;
-table-decl := table-fields | index | fieldset | query | table | flag | ';' ; // TODO fieldset
-table-fields := 'fields' ( table-fields-list | table-field-decl ) ;
-table-fields-list := '{' table-field-decls '}' [';'] ;
-table-field-decls := table-field-decl table-field-decls | ;
-table-field-decl := ['meta'] table-simple-field-decl ;
-table-simple-field-decl := id<type> [id<name>] ';' ;
+table-decl := field-type-fields | index | fieldset | query | table | flag | ';' ; // TODO fieldset
+
+fieldset := 'fieldset' id<name> '{' fieldset-decls '}' [';'] ;
+fieldset-decls := fieldset-decl fieldset-decls | ;
+fieldset-decl := field-expr-fields | flag | field-type-decl ;
+
+field-expr-fields := ( 'field' | 'fields' ) field-expr ;
+field-expr := field-expr-list | field-expr-decl ;
+field-expr-list := '{' field-expr-decls '}' [';'] ;
+field-expr-decls := field-expr-decl field-expr-decls | ;
+field-expr-decl := wildcard-expr | field-name-decl | field-type-field-decl ;
+field-name-decl := text<fieldname> ';' ;
+wildcard-expr := '*' ( except-expr | ';' ) ;
+except-expr := 'except' field-expr ;
+
 entity-flag := 'flag' ( entity-flag-list | entity-flag-decl ) ;
 entity-flag-list := '{' entity-flag-decls '}' [';'] ;
 entity-flag-decls := entity-flag-decl entity-flag-decls | ;

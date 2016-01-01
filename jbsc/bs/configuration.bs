@@ -179,12 +179,14 @@ table configuration {
    
 //	primary id;
 
-/*
+
 	fieldset data {
-		* except id; // light fieldset to prevent generating C++ struct
-		transient bool has_name;
+		fields {
+			* except id;
+			transient bool has_name;
+		}
 	}
-	
+/*	
 	select query load {
 		fields data;
 		where id;
@@ -210,15 +212,14 @@ table configuration {
 			Id property;
 			PropertyValue value;
 		}
-	}
-/*
-		primary * except value;
 
-		fieldset data {
+//		primary * except value;
+
+		fieldset data2 { fields {
 			property;
 			value;
-		};
-
+		}};
+/*
 		select query load {
 			fields data;
 			where all {
@@ -256,8 +257,8 @@ table configuration {
 			}
 			where configuration_id;
 		}
+		*/
 	}
-*/
 
 }
 

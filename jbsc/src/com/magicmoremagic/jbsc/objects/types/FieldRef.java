@@ -19,11 +19,11 @@ public class FieldRef {
 		return name;
 	}
 
-	public FieldRef setName(String name) {
-		// TODO verify unique names
-		this.name = name;
-		return this;
-	}
+//	public FieldRef setName(String name) {
+//		// TODO verify unique names
+//		this.name = name;
+//		return this;
+//	}
 
 	public int getFirstSqlIndex() {
 		return firstSqlIndex;
