@@ -12,7 +12,7 @@ scoped-decl := code | col-type | class-type | aggregate-type | table | flag | ';
 code := [code-qualifier] unqualified-code ;
 code-qualifier := 'inline' | 'header' | 'sqlid' | 'source' ;
 unqualified-code := 'code' text<code> ';' ;
-col-type := 'coltype' text '{' col-type-decls '}' [';'] ;
+col-type := 'coltype' id '{' col-type-decls '}' [';'] ;
 col-type-decls := col-type-decl col-type-decls | ;
 col-type-decl := affinity | constraints | flag | field-type-decl ;
 affinity := 'affinity' text ';' ;
@@ -33,7 +33,7 @@ field-type-decl := required-include | parse | assign | ';' ;
 field-type-function-code := function-name text ';' ;
 table := 'table' id<name> '{' table-decls '}' [';'] ;
 table-decls := table-decl table-decls | ;
-table-decl := field-type-fields | index | fieldset | query | table | flag | ';' ; // TODO fieldset
+table-decl := field-type-fields | index | fieldset | query | table | flag | ';' ;
 
 fieldset := 'fieldset' id<name> '{' fieldset-decls '}' [';'] ;
 fieldset-decls := fieldset-decl fieldset-decls | ;
@@ -44,7 +44,7 @@ field-expr := field-expr-list | field-expr-decl ;
 field-expr-list := '{' field-expr-decls '}' [';'] ;
 field-expr-decls := field-expr-decl field-expr-decls | ;
 field-expr-decl := wildcard-expr | field-name-decl | field-type-field-decl ;
-field-name-decl := text<fieldname> ';' ;
+field-name-decl := id<fieldname> ';' ;
 wildcard-expr := '*' ( except-expr | ';' ) ;
 except-expr := 'except' field-expr ;
 

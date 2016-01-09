@@ -5,6 +5,7 @@ import static com.magicmoremagic.jbsc.visitors.base.IEntityVisitor.*;
 import java.util.*;
 
 import com.magicmoremagic.jbsc.objects.containers.Namespace;
+import com.magicmoremagic.jbsc.objects.containers.Spec;
 import com.magicmoremagic.jbsc.util.CodeGenConfig;
 import com.magicmoremagic.jbsc.visitors.base.IEntityVisitor;
 
@@ -132,8 +133,13 @@ public abstract class AbstractContainer extends AbstractEntity {
 				String rest = name.substring(index + CodeGenConfig.QUALIFIED_NAME_SEPARATOR.length());
 				return entity.lookupEntity(rest, false);
 			} else if (getRoot() != null) {
-				StringBuilder sb = new StringBuilder(getFullyQualifiedName());
-				sb.append(CodeGenConfig.QUALIFIED_NAME_SEPARATOR);
+				StringBuilder sb;
+				if (this instanceof Spec) {
+					sb = new StringBuilder();
+				} else {
+					sb = new StringBuilder(getFullyQualifiedName());
+					sb.append(CodeGenConfig.QUALIFIED_NAME_SEPARATOR);
+				}
 				sb.append(name);
 				
 				entity = getRoot().lookupIncludedEntity(sb.toString());
@@ -147,8 +153,13 @@ public abstract class AbstractContainer extends AbstractEntity {
 			if (entity != null) {
 				return entity;
 			} else if (getRoot() != null) {
-				StringBuilder sb = new StringBuilder(getFullyQualifiedName());
-				sb.append(CodeGenConfig.QUALIFIED_NAME_SEPARATOR);
+				StringBuilder sb;
+				if (this instanceof Spec) {
+					sb = new StringBuilder();
+				} else {
+					sb = new StringBuilder(getFullyQualifiedName());
+					sb.append(CodeGenConfig.QUALIFIED_NAME_SEPARATOR);
+				}
 				sb.append(name);
 				
 				entity = getRoot().lookupIncludedEntity(sb.toString());

@@ -9,6 +9,7 @@ import java.util.Map;
 import com.magicmoremagic.jbsc.objects.containers.Spec;
 import com.magicmoremagic.jbsc.parser.Parser;
 import com.magicmoremagic.jbsc.util.IndentingPrintWriter;
+import com.magicmoremagic.jbsc.visitors.PrintHierarchyVisitor;
 
 public class JBSC {
 	
@@ -158,6 +159,10 @@ public class JBSC {
 						if ((spec.getErrorCount() > 0 || spec.getWarningCount() > 0) && !USE_STDOUT) {
 							return FileVisitResult.CONTINUE;
 						}
+						
+						IndentingPrintWriter w = new IndentingPrintWriter(System.out, true);
+						PrintHierarchyVisitor vis = new PrintHierarchyVisitor(w);
+						spec.visit(vis);
 						
 						for (OutputFileType type : OutputFileType.values()) {
 							

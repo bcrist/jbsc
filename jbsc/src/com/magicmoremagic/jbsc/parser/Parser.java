@@ -10,6 +10,7 @@ import com.magicmoremagic.jbsc.objects.*;
 import com.magicmoremagic.jbsc.objects.base.*;
 import com.magicmoremagic.jbsc.objects.base.AbstractEntity.ExtractNamespaceResult;
 import com.magicmoremagic.jbsc.objects.containers.*;
+import com.magicmoremagic.jbsc.objects.queries.FieldList;
 import com.magicmoremagic.jbsc.objects.types.*;
 import com.magicmoremagic.jbsc.parser.Lexer.Mark;
 
@@ -187,6 +188,7 @@ public class Parser {
 		put("no-skip-parse-assign", both);
 	}};
 	
+	
 	private boolean pScopedDecl(AbstractContainer parent) {
 		// scoped-decl := code | col-type | class-type | table | flag | ';' ;
 		// TODO fieldset
@@ -293,6 +295,7 @@ public class Parser {
 		put("no-skip-assign-parse", both);
 		put("no-skip-parse-assign", both);
 	}};
+	
 	
 	private boolean pColTypeDecl(ColType colType) {
 		// col-type-decl := affinity | constraints | flag | field-type-decl ;
@@ -401,6 +404,7 @@ public class Parser {
 		put("no-skip-parse-assign", both);
 	}};
 	
+	
 	private boolean pClassTypeDecl(ClassType classType, Phase phase) {
 		// class-type-decl := class-name | class-type-fields | flag | field-type-decl ;		
 		
@@ -465,6 +469,7 @@ public class Parser {
 		put("no-skip-assign-parse", both);
 		put("no-skip-parse-assign", both);
 	}};
+	
 	
 	private boolean pAggregateTypeDecl(AggregateType type) {
 		// aggregate-type-decl := field-type-fields | flag | field-type-decl ;
@@ -545,7 +550,7 @@ public class Parser {
 						}
 						return true;
 					}
-				}				
+				}
 				warning(mark.peek(), parent, typeName + " does not define a FieldType!");
 			}
 			return true;
@@ -626,7 +631,7 @@ public class Parser {
 		
 		if (pFieldTypeFields(table, Phase.PARSE)) return true;
 //		if (pTableIndex(table)) return true;	// TODO
-//		if (pFieldSet(table)) return true;		// TODO
+		if (pFieldset(table)) return true;
 //		if (pQuery(table)) return true;			// TODO
 		if (pTable(table)) return true;
 		if (pEntityFlag(table, validTableFlags)) return true;
@@ -636,16 +641,182 @@ public class Parser {
 	}
 	
 	
+	private boolean pFieldset(Table parent) {
+		// fieldset := 'fieldset' id<name> '{' fieldset-decls '}' [';'] ;
+		if (optionalID("fieldset")) {
+			Mark mark = lexer.mark();
+			String name = expectID();
+			if (name != null) {
+				AggregateType fieldset = new AggregateType(name);
+				try {
+					parent.addChild(fieldset);
+				} catch (Exception e) {
+					warning(mark.peek(), parent, "Could not add Fieldset '" + fieldset.getName() + "'", e);
+				}
+				if (expectOpen() && pFieldsetDecls(fieldset, parent) && expectClose()) {
+					optionalEnd();
+				}
+			}
+			return true;
+		}
+		return false;
+	}
+	
+	private boolean pFieldsetDecls(AggregateType fieldset, Table parent) {
+		// fieldset-decls := fieldset-decl fieldset-decls | ;
+		while (pFieldsetDecl(fieldset, parent));
+		return true;
+	}
+	
+	@SuppressWarnings("serial")
+	private static final Map<String, Set<Flag>> validFieldsetFlags = new HashMap<String, Set<Flag>>() {{
+		put("assign-by-value", EnumSet.of(Flag.ASSIGN_BY_VALUE));
+		put("no-skip-parse", EnumSet.of(Flag.NO_SKIP_PARSE));
+		put("no-skip-assign", EnumSet.of(Flag.NO_SKIP_ASSIGN));
+		EnumSet<Flag> both = EnumSet.of(Flag.NO_SKIP_PARSE, Flag.NO_SKIP_ASSIGN);
+		put("no-skip-assign-parse", both);
+		put("no-skip-parse-assign", both);
+	}};
 	
 	
+	private boolean pFieldsetDecl(AggregateType fieldset, Table parent) {
+		// fieldset-decl := field-expr-fields | flag | field-type-decl ;
+		
+		if (pFieldExprFields(fieldset, fieldset.fields(), parent.fields())) return true;
+		if (pEntityFlag(fieldset, validFieldsetFlags)) return true;
+		if (pFieldTypeDecl(fieldset, Phase.PARSE)) return true;
+		
+		return false;
+	}
 	
 	
-	
-	
-	
-	
-	
-	
+	private boolean pFieldExprFields(FieldType destType, FieldList dest, FieldList src) {
+		// field-expr-fields := ( 'field' | 'fields' ) field-expr ;
+		
+		if (optionalID("field") || optionalID("fields")) {
+			if (!pFieldExpr(destType, dest, src)) {
+				parseError(lexer.peek(), destType, "expected field-expr!");
+			}
+			return true;
+		}
+		return false;
+	}
+
+	private boolean pFieldExpr(FieldType destType, FieldList dest, FieldList src) {
+		// field-expr := field-expr-list | field-expr-decl ;
+		
+		if (pFieldExprList(destType, dest, src)) return true;
+		if (pFieldExprDecl(destType, dest, src)) return true;
+		
+		return false;
+	}
+
+	private boolean pFieldExprList(FieldType destType, FieldList dest, FieldList src) {
+		// field-expr-list := '{' field-expr-decls '}' [';'] ;
+		
+		if (optionalOpen()) {
+			if (pFieldExprDecls(destType, dest, src)) {
+				if (expectClose()) {
+					optionalEnd();
+				}
+			} else {
+				parseError(lexer.peek(), destType, "expected field-expr-decl!");
+			}
+			return true;
+		}
+		return false;
+	}
+
+	private boolean pFieldExprDecls(FieldType destType, FieldList dest, FieldList src) {
+		// field-expr-decls := field-expr-decl field-expr-decls | ;
+		while (pFieldExprDecl(destType, dest, src));
+		return true;
+	}
+
+	private boolean pFieldExprDecl(FieldType destType, FieldList dest, FieldList src) {
+		// field-expr-decl := wildcard-expr | field-name-decl | field-type-field-decl ;
+		
+		if (pWildcardExpr(dest, src)) return true;
+		if (pFieldNameDecl(destType, dest, src)) return true;
+		if (destType != null) {
+			if (pFieldTypeFieldDecl(destType, Phase.PARSE)) return true;
+		}
+		
+		return false;
+	}
+
+	private boolean pFieldNameDecl(FieldType destType, FieldList dest, FieldList src) {
+		// field-name-decl := id<fieldname> ';' ;
+		
+		Mark mark = lexer.mark();
+		String fieldName = optionalID();
+		if (fieldName != null && optionalEnd()) {
+			
+			// add field from source to dest
+			for (FieldRef ref : src.get()) {
+				if (ref.getName().equals(fieldName)) {
+					FieldRef newRef = new FieldRef(ref.getType(), ref.getName(), ref.getFirstSqlIndex());
+					newRef.setMeta(ref.isMeta());
+					newRef.setTransient(ref.isTransient());
+					
+					dest.add(newRef);
+					return true;
+				}
+			}
+			warning(mark.peek(), destType, "No field named '" + fieldName + "' was found!");
+			
+			return true;
+		}
+		
+		mark.restore();
+		return false;
+	}
+
+	private boolean pWildcardExpr(FieldList dest, FieldList src) {
+		// wildcard-expr := '*' ( except-expr | ';' ) ;
+		if (optional(TokenType.WILDCARD, true)) {
+			
+			FieldList exceptFields = pExceptExpr(src);
+			if (exceptFields == null) {
+				expectEnd();
+			}
+			
+			for (FieldRef srcRef : src.get()) {
+				boolean useRef = true;
+				if (exceptFields != null) {
+					for (FieldRef exceptRef : exceptFields.get()) {
+						if (srcRef.getType() == exceptRef.getType() && srcRef.getName().equals(exceptRef.getName())) {
+							useRef = false;
+							break;
+						}
+					}
+				}
+				if (useRef) {
+					FieldRef destRef = new FieldRef(srcRef.getType(), srcRef.getName(), srcRef.getFirstSqlIndex());
+					destRef.setMeta(srcRef.isMeta());
+					destRef.setTransient(srcRef.isTransient());
+					dest.add(destRef);
+				}
+			}
+			
+			return true;
+		}
+		return false;
+	}
+
+	private FieldList pExceptExpr(FieldList src) {
+		// except-expr := 'except' field-expr ;
+		if (optionalID("except")) {
+			FieldList dest = new FieldList();
+			
+			if (!pFieldExpr(null, dest, src)) {
+				parseError(lexer.peek(), "expected field-expr!");
+			}
+			
+			return dest;
+		}
+		return null;
+	}	
 	
 	
 	
