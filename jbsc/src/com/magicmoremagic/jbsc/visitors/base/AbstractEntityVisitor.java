@@ -1,7 +1,6 @@
 package com.magicmoremagic.jbsc.visitors.base;
 
-import com.magicmoremagic.jbsc.objects.Code;
-import com.magicmoremagic.jbsc.objects.Function;
+import com.magicmoremagic.jbsc.objects.*;
 import com.magicmoremagic.jbsc.objects.base.*;
 import com.magicmoremagic.jbsc.objects.containers.*;
 import com.magicmoremagic.jbsc.objects.queries.Query;
@@ -101,6 +100,16 @@ public abstract class AbstractEntityVisitor implements IEntityVisitor {
 
 	@Override
 	public int leaveTable(Table table) {
+		return CONTINUE;
+	}
+	
+	@Override
+	public int visitTableIndex(TableIndex table) {
+		return CONTINUE;
+	}
+
+	@Override
+	public int leaveTableIndex(TableIndex table) {
 		return CONTINUE;
 	}
 

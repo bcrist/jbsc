@@ -35,6 +35,13 @@ table := 'table' id<name> '{' table-decls '}' [';'] ;
 table-decls := table-decl table-decls | ;
 table-decl := field-type-fields | index | fieldset | query | table | flag | ';' ;
 
+index := primary-index | unique-index | basic-index ;
+primary-index := 'primary' [ 'index' | 'key'] index-expr ;
+unique-index := 'unique' [ 'index' | 'key' ] index-expr ;
+basic-index := ( 'index' | 'key' ) index-expr ;
+index-expr := field-expr ; // don't pass index object; field-type-field-decl should be disabled.
+
+
 fieldset := 'fieldset' id<name> '{' fieldset-decls '}' [';'] ;
 fieldset-decls := fieldset-decl fieldset-decls | ;
 fieldset-decl := field-expr-fields | flag | field-type-decl ;
@@ -56,3 +63,8 @@ required-include := ['implementation'] 'include' ( required-include-list | requi
 required-include-list := '{' required-include-names '}' [';'] ;
 required-include-names := required-include-name required-include-names | ;
 required-include-name := ( text.astring | text ) ';' ;
+
+
+
+
+primary unique index key

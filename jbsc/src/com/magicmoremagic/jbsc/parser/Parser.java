@@ -630,7 +630,7 @@ public class Parser {
 		// table-decl := field-type-fields | index | fieldset | query | table | flag | ';' ;
 		
 		if (pFieldTypeFields(table, Phase.PARSE)) return true;
-//		if (pTableIndex(table)) return true;	// TODO
+		if (pTableIndex(table)) return true;
 		if (pFieldset(table)) return true;
 //		if (pQuery(table)) return true;			// TODO
 		if (pTable(table)) return true;
@@ -639,6 +639,48 @@ public class Parser {
 		
 		return false;
 	}
+	
+	
+	private boolean pTableIndex(Table parent) {
+		// index := primary-index | unique-index | basic-index ;
+		// primary-index := 'primary' [ 'index' | 'key'] index-expr ;
+		// unique-index := 'unique' [ 'index' | 'key' ] index-expr ;
+
+		if (optionalID("primary")) {
+			pTableIndex(parent, true, false); // will never return false
+			return true;
+		}
+		
+		if (optionalID("unique")) {
+			pTableIndex(parent, false, true); // will never return false
+			return true;
+		}
+		
+		return pTableIndex(parent, false, false);
+	}
+	
+	private boolean pTableIndex(Table parent, boolean primary, boolean unique) {
+		// basic-index := ( 'index' | 'key' ) index-expr ;
+		if (optionalID("index") || optionalID("key") || primary || unique) {
+			TableIndex index = new TableIndex();
+			try {
+				parent.addChild(index);
+			} catch (Exception e) {
+				warning(lexer.peek(), parent, "Could not add Index", e);
+			}
+			if (!pTableIndexExpr(index, parent)) {
+				parseError(lexer.peek(), index, "expected index-expr!");
+			}
+			return true;
+		}
+		return false;
+	}
+	
+	private boolean pTableIndexExpr(TableIndex index, Table parent) {
+		// index-expr := field-expr ;
+		return pFieldExpr(null, index.fields(), parent.fields()); // don't pass index object; field-type-field-decl should be disabled.
+	}
+	
 	
 	
 	private boolean pFieldset(Table parent) {

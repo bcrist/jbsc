@@ -177,7 +177,7 @@ table configuration {
 		U16 max_history;
 	};
    
-//	primary id;
+	primary id;
 
 
 	fieldset data {
@@ -213,7 +213,7 @@ table configuration {
 			PropertyValue value;
 		}
 
-//		primary * except value;
+		primary * except value;
 
 		fieldset data2 { fields {
 			property;

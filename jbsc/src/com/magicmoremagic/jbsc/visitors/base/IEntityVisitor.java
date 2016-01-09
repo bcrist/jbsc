@@ -1,7 +1,6 @@
 package com.magicmoremagic.jbsc.visitors.base;
 
-import com.magicmoremagic.jbsc.objects.Code;
-import com.magicmoremagic.jbsc.objects.Function;
+import com.magicmoremagic.jbsc.objects.*;
 import com.magicmoremagic.jbsc.objects.base.*;
 import com.magicmoremagic.jbsc.objects.containers.*;
 import com.magicmoremagic.jbsc.objects.queries.Query;
@@ -44,6 +43,9 @@ public interface IEntityVisitor {
 	
 	int visitTable(Table table);
 	int leaveTable(Table table);
+	
+	int visitTableIndex(TableIndex index);
+	int leaveTableIndex(TableIndex index);
 	
 	int visitFunction(Function function);
 	int leaveFunction(Function function);
