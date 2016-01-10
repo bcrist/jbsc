@@ -1,40 +1,36 @@
 package com.magicmoremagic.jbsc.objects.queries;
 
-import java.util.*;
-
 import com.magicmoremagic.jbsc.objects.Function;
 import com.magicmoremagic.jbsc.objects.base.AbstractContainer;
 import com.magicmoremagic.jbsc.visitors.base.IEntityVisitor;
 
 public abstract class Query extends AbstractContainer {
 	
-	private Map<FieldList, Function> functions;
-	private Map<FieldList, Function> unmodFunctions;
+	protected FieldList parameters;
+	protected FieldList results;
+	protected Function function;
 	
 	public Query() {
-		functions = new HashMap<>();
-		unmodFunctions = Collections.unmodifiableMap(functions);
+		parameters = new FieldList();
+		results = new FieldList();
 	}
 	
-	
-	public Collection<FieldList> getParameterSets() {
-		return unmodFunctions.keySet();
+	public FieldList getParameters() {
+		return parameters;
 	}
 	
-	public Function getFunction(FieldList parameterSet) {
-		return functions.get(parameterSet);
+	public FieldList getResults() {
+		return parameters;
 	}
 	
-	public Query addParameterSet(FieldList parameterSet) {
-		functions.put(parameterSet, createFunction(parameterSet));
-		return this;
+	public Function getFunction() {
+		return function;
 	}
 	
 	public abstract String getSQL();
 	
 	protected abstract Function createFunction(FieldList parameterSet);
 	
-
 	@Override
 	protected int onVisitorVisit(IEntityVisitor visitor) {
 		int result = super.onVisitorVisit(visitor);

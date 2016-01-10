@@ -194,11 +194,11 @@ table configuration {
 	}
 	
 	replace query save {
-		fields {
+		fields *;
+		alias params {
 			id;
 			data;
 		}
-		fields *;
 	}
 	
 	delete query erase {
@@ -229,15 +229,12 @@ table configuration {
 		};
 
 		replace query save {
-			fields {
+			fields *;
+			alias params {
 				configuration_id;
 				history_index;
 				data;
 			};
-		};
-
-		replace query save {	// second definition is allowed as long as generated query is identical
-			fields *;
 		};
 
 		delete query erase {
