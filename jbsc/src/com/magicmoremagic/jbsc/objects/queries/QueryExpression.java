@@ -1,6 +1,6 @@
 package com.magicmoremagic.jbsc.objects.queries;
 
-public interface QueryExpresssion {
+public interface QueryExpression {
 
 	FieldList getParameters();
 	String getSQL();

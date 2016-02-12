@@ -49,7 +49,7 @@ select-query := 'select' ['query'] id<name> select-query-expr ;
 select-query-expr := select-query-expr-list | select-query-expr-decl ;
 select-query-expr-list := '{' select-query-expr-decls '}' [';'] ;
 select-query-expr-decls := select-query-expr-decl select-query-expr-list | ;
-select-query-expr-decl := select-results | where-decl | group-decl | order-decl | limit-decl ;
+select-query-expr-decl := select-results | where-decl | group-decl | order-decl | limit-decl | custom-query-expr-decl ;
 select-results := ( 'field' | 'fields' | 'result' | 'results' ) select-results-expr ;
 select-results-expr := select-results-expr-list | select-results-expr-decl ;
 select-results-expr-list := '{' select-results-expr-decls '}' [';'] ;
@@ -62,14 +62,14 @@ insert-query-keyword := 'replace' | ( 'insert' [ 'or' conflict-policy-keyword ] 
 insert-query-expr := insert-query-expr-list | insert-query-expr-decl ;
 insert-query-expr-list := '{' insert-query-expr-decls '}' [';'] ;
 insert-query-expr-decls := insert-query-expr-decl insert-query-expr-decls | ;
-insert-query-expr-decl := write-params | alias-decl ;
+insert-query-expr-decl := write-params | custom-query-expr-decl ;
 
 update-query := update-query-keyword id<name> update-query-expr ;
 update-query-keyword := 'update' [ 'or' conflict-policy-keyword ] [ 'query' ] ;
 update-query-expr := update-query-expr-list | update-query-expr-decl ;
 update-query-expr-list := '{' update-query-expr-decls '}' [';'] ;
 update-query-expr-decls := update-query-expr-decl update-query-expr-decls | ;
-update-query-expr-decl := write-params | where-decl | alias-decl ;
+update-query-expr-decl := write-params | where-decl | custom-query-expr-decl ;
 
 write-params := ( 'field' | 'fields' | 'param' | 'params' ) write-params-expr ;
 write-params-expr := write-params-expr-list | write-params-expr-decl ;
@@ -81,7 +81,7 @@ delete-query := 'delete' [ 'query' ] id<name> delete-query-expr ;
 delete-query-expr := delete-query-expr-list | delete-query-expr-decl ;
 delete-query-expr-list := '{' delete-query-expr-decls '}' [';'] ;
 delete-query-expr-decls := delete-query-expr-decl delete-query-expr-decls | ;
-delete-query-expr-decl := where-decl | alias-decl ;
+delete-query-expr-decl := where-decl | custom-query-expr-decl ;
 
 custom-query := 'query' id<name> custom-query-expr ;
 custom-query-expr := custom-query-expr-list | custom-query-expr-decl ;
@@ -92,6 +92,7 @@ custom-query-expr-decl := query-sql | query-params | query-results | alias-decl 
 query-sql := 'sql' text<sql> ';' ;
 
 query-params := ( 'param' | 'params' ) query-fields-expr ;
+query-results := ( 'result' | 'results' ) query-fields-expr ;
 
 query-fields-expr := query-fields-expr-list | query-fields-expr-decl ;
 query-fields-expr-list := '{' query-fields-expr-decls '}' [';'] ;
@@ -100,13 +101,15 @@ query-fields-expr-decl :=  wildcard-expr | field-name-decl | query-field-decl;
 query-field-decl := id<type> id<name> ';' ;
 
 where-decl := 'where' query-expr-decl ;
-group-decl := 'group' [ 'by' ] query-expr-decl ;
-order-decl := 'order' [ 'by' ] query-expr-decl ;
-limit-decl := 'limit' query-expr-decl ;
+group-decl := 'group' [ 'by' ] query-expr-decl-or-list ;
+order-decl := 'order' [ 'by' ] query-expr-decl-or-list ;
+limit-decl := 'limit' query-expr-decl-or-list ;
 
-query-expr-decls : query-expr-decl query-expr-decls | ;
-query-expr-decl := any-expr | all-expr | wildcard-expr | field-name-decl | field-name-sql-decl | query-field-sql-decl | query-expr-sql-decl ;
-field-name-sql-decl := id<fieldname> text<sql> ';' ;
+query-expr-decl-or-list := query-expr-decl-list | query-expr-decl ;
+query-expr-decl-list := '{' query-expr-decls '}' [';'] ;
+query-expr-decls := query-expr-decl query-expr-decls | ;
+query-expr-decl := any-expr | all-expr | wildcard-expr | field-name-sql-decl | query-field-sql-decl | query-expr-sql-decl ;
+field-name-sql-decl := id<fieldname> [ text<sql> ] ';' ;
 query-field-sql-decl := id<type> id<name> text<sql> ';' ;
 query-expr-sql-decl := text<sql> ';' ;
 
